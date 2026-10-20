@@ -52,4 +52,5 @@
 ## Документы
 
 - [План работ](docs/PLAN.md)
+- [Архитектура](docs/ARCHITECTURE.md)
 
