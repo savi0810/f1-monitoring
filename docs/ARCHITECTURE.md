@@ -35,7 +35,21 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 | f1-collector (Python) | Получение данных из F1 Live Timing и OpenF1, публикация событий | нет | `f1.events` | `import.requested` |
 | Frontend | Клиент на Vue 3 | нет | — | — |
 
-Подробные эндпоинты будут описаны при разработке и в Swagger каждого сервиса.
+### Примерные эндпоинты
+
+Список предварительный, точное описание будет в Swagger каждого сервиса.
+
+| Сервис | Запрос | Что делает |
+|--------|--------|-----------|
+| Auth.Api | `POST /api/auth/register` | Регистрация |
+| Auth.Api | `POST /api/auth/login` | Вход, выдача JWT |
+| Telemetry.Api | `GET /api/telemetry/races` | Список гонок |
+| Telemetry.Api | `GET /api/telemetry/races/{id}` | Данные выбранной гонки |
+| Telemetry.Api | `GET /api/telemetry/compare` | Сравнение двух пилотов |
+| Alerts.Api | `GET, POST, DELETE /api/alerts/rules` | Правила уведомлений |
+| Alerts.Api | `GET, POST, DELETE /api/alerts/favorites` | Избранные пилоты |
+| Alerts.Api | `GET /api/alerts/history` | Журнал уведомлений |
+| Live.Api | `/livehub` (SignalR) | Подписка на гонку, приём событий и уведомлений |
 
 ## 5. Модель данных
 
