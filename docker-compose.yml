@@ -1,0 +1,55 @@
+services:
+  auth-api:
+    build:
+      context: .
+      dockerfile: src/Auth.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5185:8080"
+
+  telemetry-api:
+    build:
+      context: .
+      dockerfile: src/Telemetry.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5168:8080"
+
+  alerts-api:
+    build:
+      context: .
+      dockerfile: src/Alerts.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5262:8080"
+
+  live-api:
+    build:
+      context: .
+      dockerfile: src/Live.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5052:8080"
+
+  gateway-api:
+    build:
+      context: .
+      dockerfile: src/Gateway.Api/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5055:8080"
+    depends_on:
+      - auth-api
+      - telemetry-api
+      - alerts-api
+      - live-api
