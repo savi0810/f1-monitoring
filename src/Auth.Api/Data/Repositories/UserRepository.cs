@@ -1,4 +1,5 @@
 using Auth.Api.Data.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Auth.Api.Data.Repositories;
 
@@ -17,9 +18,9 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
     }
 
-    public Task<User?> GetUserByEmailAsync(string email)
+    public async Task<User?> GetUserByEmailAsync(string email)
     {
-        throw new NotImplementedException();
+        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public Task<User?> GetUserByUsernameAsync(string username)
