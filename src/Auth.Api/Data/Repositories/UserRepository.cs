@@ -11,9 +11,10 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public Task AddUserAsync(User user)
+    public async Task AddUserAsync(User user)
     {
-        throw new NotImplementedException();
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
     }
 
     public Task<User?> GetUserByEmailAsync(string email)
