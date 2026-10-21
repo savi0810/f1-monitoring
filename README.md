@@ -47,6 +47,38 @@
 
 <img width="1214" height="1027" alt="изображение" src="https://github.com/user-attachments/assets/05de9be0-3d68-4e51-821d-72e5af97289a" />
 
+## Быстрый старт
+
+Нужен установленный и запущенный Docker Desktop.
+
+```bash
+git clone https://github.com/savi0810/f1-monitoring.git
+cd f1-monitoring
+docker compose up --build
+```
+
+Первая сборка занимает несколько минут. Остановить систему: `docker compose down`.
+
+Адреса сервисов:
+
+| Сервис | Адрес | Swagger |
+|---|---|---|
+| Gateway | http://localhost:5055 | нет |
+| Auth.Api | http://localhost:5185 | http://localhost:5185/swagger |
+| Telemetry.Api | http://localhost:5168 | http://localhost:5168/swagger |
+| Alerts.Api | http://localhost:5262 | http://localhost:5262/swagger |
+| Live.Api | http://localhost:5052 | http://localhost:5052/swagger |
+
+Сейчас порты всех сервисов открыты для удобства разработки и отладки. В дальнейшем наружу останется только Gateway, а остальные сервисы будут доступны только через него.  
+
+Проверка работоспособности каждого сервиса: `/health`, например http://localhost:5055/health.
+
+## Тесты
+
+```bash
+dotnet test
+```
+
 ## Вопрос к вам
 
 Можно ли использовать сервис на Python для сбора данных? Просто не нашел удобной готовой библиотеки на c# с нужными возможностями, а на Python такая есть
