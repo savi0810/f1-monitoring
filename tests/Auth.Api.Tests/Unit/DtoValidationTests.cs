@@ -50,4 +50,12 @@ public class DtoValidationTests
     {
         Assert.True(IsValid(new LoginDto { Email = "alice@test.com", Password = "secret1" }));
     }
+
+    [Theory]
+    [InlineData("", "secret1")]
+    [InlineData("alice@test.com", "")]
+    public void LoginDto_MissingFields_Fails(string email, string password)
+    {
+        Assert.False(IsValid(new LoginDto { Email = email, Password = password }));
+    }
 }
