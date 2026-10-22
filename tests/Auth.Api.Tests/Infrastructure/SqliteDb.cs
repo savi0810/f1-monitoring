@@ -13,6 +13,8 @@ public sealed class SqliteDb<TContext> where TContext : DbContext
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
         _options = new DbContextOptionsBuilder<TContext>().UseSqlite(_connection).Options;
+        using var context = Create();
+        context.Database.EnsureCreated();
     }
 
     public TContext Create() => (TContext)Activator.CreateInstance(typeof(TContext), _options)!;
