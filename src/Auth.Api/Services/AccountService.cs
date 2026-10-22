@@ -42,6 +42,6 @@ public class AccountService : IAccountService
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             throw new InvalidCredentialsException("Неверный адрес электронной почты или пароль.");
 
-        throw new NotImplementedException();
+        return new TokenDto { AccessToken = _jwtService.GenerateToken(user) };
     }
 }
