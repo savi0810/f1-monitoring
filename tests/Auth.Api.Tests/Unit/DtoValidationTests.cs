@@ -13,4 +13,12 @@ public class DtoValidationTests
     {
         Assert.True(IsValid(new RegisterDto { Username = "alice" }));
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("ab")]
+    public void RegisterDto_InvalidUsername_Fails(string username)
+    {
+        Assert.False(IsValid(new RegisterDto { Username = username }));
+    }
 }
