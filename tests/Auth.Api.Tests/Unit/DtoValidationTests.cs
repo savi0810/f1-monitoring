@@ -11,7 +11,7 @@ public class DtoValidationTests
     [Fact]
     public void RegisterDto_ValidUsername_Passes()
     {
-        Assert.True(IsValid(new RegisterDto { Username = "alice", Email = "alice@test.com" }));
+        Assert.True(IsValid(new RegisterDto { Username = "alice", Email = "alice@test.com", Password = "secret1" }));
     }
 
     [Theory]
@@ -19,13 +19,13 @@ public class DtoValidationTests
     [InlineData("ab")]
     public void RegisterDto_InvalidUsername_Fails(string username)
     {
-        Assert.False(IsValid(new RegisterDto { Username = username, Email = "alice@test.com" }));
+        Assert.False(IsValid(new RegisterDto { Username = username, Email = "alice@test.com", Password = "secret1" }));
     }
 
     [Fact]
     public void RegisterDto_TooLongUsername_Fails()
     {
-        Assert.False(IsValid(new RegisterDto { Username = new string('a', 51), Email = "alice@test.com" }));
+        Assert.False(IsValid(new RegisterDto { Username = new string('a', 51), Email = "alice@test.com", Password = "secret1" }));
     }
 
     [Theory]
@@ -34,6 +34,6 @@ public class DtoValidationTests
     [InlineData("alice@")]
     public void RegisterDto_InvalidEmail_Fails(string email)
     {
-        Assert.False(IsValid(new RegisterDto { Username = "alice", Email = email }));
+        Assert.False(IsValid(new RegisterDto { Username = "alice", Email = email, Password = "secret1" }));
     }
 }
