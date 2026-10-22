@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Auth.Api.Tests.Infrastructure;
 
-public sealed class SqliteDb<TContext> where TContext : DbContext
+public sealed class SqliteDb<TContext> : IDisposable where TContext : DbContext
 {
     private readonly SqliteConnection _connection;
     private readonly DbContextOptions<TContext> _options;
@@ -18,4 +18,6 @@ public sealed class SqliteDb<TContext> where TContext : DbContext
     }
 
     public TContext Create() => (TContext)Activator.CreateInstance(typeof(TContext), _options)!;
+
+    public void Dispose() => _connection.Dispose();
 }
