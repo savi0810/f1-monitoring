@@ -13,4 +13,10 @@ public static class DbServiceExtensions
         services.RemoveAll<DbContextOptions<TContext>>();
         services.AddDbContext<TContext>(options => options.UseSqlite(connection));
     }
+
+    public static void EnsureDatabase<TContext>(this IServiceProvider provider) where TContext : DbContext
+    {
+        using var scope = provider.CreateScope();
+        scope.ServiceProvider.GetRequiredService<TContext>().Database.EnsureCreated();
+    }
 }
