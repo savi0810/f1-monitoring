@@ -34,8 +34,11 @@ public class AccountService : IAccountService
         await _userRepository.AddUserAsync(user);
     }
 
-    public Task<TokenDto> LoginAsync(LoginDto dto)
+    public async Task<TokenDto> LoginAsync(LoginDto dto)
     {
+        var user = await _userRepository.GetUserByEmailAsync(dto.Email)
+            ?? throw new InvalidCredentialsException("Неверный адрес электронной почты или пароль.");
+
         throw new NotImplementedException();
     }
 }
