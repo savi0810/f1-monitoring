@@ -11,6 +11,15 @@ public static class DbServiceExtensions
         where TContext : DbContext
     {
         services.RemoveAll<DbContextOptions<TContext>>();
+        foreach (var descriptor in services
+                     .Where(d => d.ServiceType.IsGenericType
+                                 && d.ServiceType.GetGenericArguments().Contains(typeof(TContext))
+                                 && d.ServiceType.Name.StartsWith("IDbContextOptionsConfiguration"))
+                     .ToList())
+        {
+            services.Remove(descriptor);
+        }
+
         services.AddDbContext<TContext>(options => options.UseSqlite(connection));
     }
 
