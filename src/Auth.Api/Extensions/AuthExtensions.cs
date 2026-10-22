@@ -14,6 +14,7 @@ public static class AuthExtensions
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IAccountService, AccountService>();
 
         return services;
     }
