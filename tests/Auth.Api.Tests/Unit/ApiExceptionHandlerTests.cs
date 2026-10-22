@@ -18,4 +18,16 @@ public class ApiExceptionHandlerTests
         Assert.True(handled);
         Assert.Equal(StatusCodes.Status409Conflict, context.Response.StatusCode);
     }
+
+    [Fact]
+    public async Task InvalidCredentialsException_Returns401()
+    {
+        var context = new DefaultHttpContext();
+        context.Response.Body = new MemoryStream();
+
+        var handled = await _handler.TryHandleAsync(context, new InvalidCredentialsException("wrong"), CancellationToken.None);
+
+        Assert.True(handled);
+        Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+    }
 }
