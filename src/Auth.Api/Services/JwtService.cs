@@ -13,6 +13,9 @@ public class JwtService : IJwtService
 
     public string GenerateToken(User user)
     {
+        var key = _configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException("JWT key is not configured.");
+
         throw new NotImplementedException();
     }
 }
