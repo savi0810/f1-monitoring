@@ -20,4 +20,10 @@ public class UserRepositoryTests : IDisposable
 
         Assert.NotNull(await new UserRepository(_db.Create()).GetUserByUsernameAsync("alice"));
     }
+
+    [Fact]
+    public async Task GetUserByUsernameAsync_Unknown_ReturnsNull()
+    {
+        Assert.Null(await new UserRepository(_db.Create()).GetUserByUsernameAsync("ghost"));
+    }
 }
