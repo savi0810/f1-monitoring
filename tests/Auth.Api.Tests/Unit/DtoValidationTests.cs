@@ -36,4 +36,12 @@ public class DtoValidationTests
     {
         Assert.False(IsValid(new RegisterDto { Username = "alice", Email = email, Password = "secret1" }));
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("12345")]
+    public void RegisterDto_InvalidPassword_Fails(string password)
+    {
+        Assert.False(IsValid(new RegisterDto { Username = "alice", Email = "alice@test.com", Password = password }));
+    }
 }
