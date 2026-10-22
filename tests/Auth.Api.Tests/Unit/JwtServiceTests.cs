@@ -58,4 +58,16 @@ public class JwtServiceTests
         var validTo = new JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo;
         Assert.InRange(validTo, DateTime.UtcNow.AddDays(7).AddMinutes(-1), DateTime.UtcNow.AddDays(7).AddMinutes(1));
     }
+
+    [Fact]
+    public void GenerateToken_UsesConfiguredExpirationDays()
+    {
+        var config = BaseConfig();
+        config["Jwt:ExpirationDays"] = "30";
+
+        var token = Create(config).GenerateToken(User());
+
+        var validTo = new JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo;
+        Assert.InRange(validTo, DateTime.UtcNow.AddDays(30).AddMinutes(-1), DateTime.UtcNow.AddDays(30).AddMinutes(1));
+    }
 }
