@@ -26,4 +26,16 @@ public class UserRepositoryTests : IDisposable
     {
         Assert.Null(await new UserRepository(_db.Create()).GetUserByUsernameAsync("ghost"));
     }
+
+    [Fact]
+    public async Task GetUserByEmailAsync_ReturnsMatchingUser()
+    {
+        var repository = new UserRepository(_db.Create());
+        await repository.AddUserAsync(new User { Username = "alice", Email = "alice@test.com", PasswordHash = "hash" });
+        await repository.AddUserAsync(new User { Username = "bob", Email = "bob@test.com", PasswordHash = "hash" });
+
+        var found = await new UserRepository(_db.Create()).GetUserByEmailAsync("bob@test.com");
+
+        Assert.Equal("bob", found!.Username);
+    }
 }
