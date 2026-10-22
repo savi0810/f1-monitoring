@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using Auth.Api.Data.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -23,6 +24,13 @@ public class JwtService : IJwtService
 
         var expirationDays = _configuration.GetValue<int?>("Jwt:ExpirationDays") ?? 7;
         var expires = DateTime.UtcNow.AddDays(expirationDays);
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Email, user.Email),
+        };
 
         throw new NotImplementedException();
     }
