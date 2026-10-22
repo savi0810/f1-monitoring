@@ -20,6 +20,8 @@ public class AccountServiceTests
 
     private static RegisterDto Dto() => new() { Username = "alice", Email = "alice@test.com", Password = "secret1" };
 
+    private static LoginDto LoginDto() => new() { Email = "alice@test.com", Password = "secret1" };
+
     [Fact]
     public async Task RegisterAsync_DuplicateEmail_ThrowsConflict()
     {
@@ -50,5 +52,13 @@ public class AccountServiceTests
         Assert.Equal("alice", saved!.Username);
         Assert.NotEqual("secret1", saved.PasswordHash);
         Assert.True(BCrypt.Net.BCrypt.Verify("secret1", saved.PasswordHash));
+    }
+
+    [Fact]
+    public async Task LoginAsync_UnknownUser_ThrowsInvalidCredentials()
+    {
+        _repository.GetUserByEmailAsync("alice@test.com").Returns((User?)null);
+
+        await Assert.ThrowsAsync<InvalidCredentialsException>(() => _service.LoginAsync(LoginDto()));
     }
 }
