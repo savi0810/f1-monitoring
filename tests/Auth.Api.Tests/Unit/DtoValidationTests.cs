@@ -21,4 +21,10 @@ public class DtoValidationTests
     {
         Assert.False(IsValid(new RegisterDto { Username = username }));
     }
+
+    [Fact]
+    public void RegisterDto_TooLongUsername_Fails()
+    {
+        Assert.False(IsValid(new RegisterDto { Username = new string('a', 51) }));
+    }
 }
