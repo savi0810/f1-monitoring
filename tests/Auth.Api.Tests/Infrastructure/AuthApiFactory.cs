@@ -26,4 +26,11 @@ public class AuthApiFactory : WebApplicationFactory<Program>
         host.Services.EnsureDatabase<AppDbContext>();
         return host;
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        if (disposing)
+            _connection.Dispose();
+    }
 }
