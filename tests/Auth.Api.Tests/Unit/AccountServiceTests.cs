@@ -72,4 +72,16 @@ public class AccountServiceTests
 
         await Assert.ThrowsAsync<InvalidCredentialsException>(() => _service.LoginAsync(dto));
     }
+
+    [Fact]
+    public async Task LoginAsync_ValidCredentials_ReturnsToken()
+    {
+        var user = new User { Email = "alice@test.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("secret1") };
+        _repository.GetUserByEmailAsync("alice@test.com").Returns(user);
+        _jwt.GenerateToken(user).Returns("token");
+
+        var result = await _service.LoginAsync(LoginDto());
+
+        Assert.Equal("token", result.AccessToken);
+    }
 }
