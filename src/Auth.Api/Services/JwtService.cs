@@ -21,6 +21,9 @@ public class JwtService : IJwtService
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+        var expirationDays = _configuration.GetValue<int?>("Jwt:ExpirationDays") ?? 7;
+        var expires = DateTime.UtcNow.AddDays(expirationDays);
+
         throw new NotImplementedException();
     }
 }
