@@ -28,4 +28,13 @@ public class AccountServiceTests
         await Assert.ThrowsAsync<ConflictException>(() => _service.RegisterAsync(Dto()));
         await _repository.DidNotReceive().AddUserAsync(Arg.Any<User>());
     }
+
+    [Fact]
+    public async Task RegisterAsync_DuplicateUsername_ThrowsConflict()
+    {
+        _repository.GetUserByUsernameAsync("alice").Returns(new User());
+
+        await Assert.ThrowsAsync<ConflictException>(() => _service.RegisterAsync(Dto()));
+        await _repository.DidNotReceive().AddUserAsync(Arg.Any<User>());
+    }
 }
