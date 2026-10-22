@@ -39,6 +39,9 @@ public class AccountService : IAccountService
         var user = await _userRepository.GetUserByEmailAsync(dto.Email)
             ?? throw new InvalidCredentialsException("Неверный адрес электронной почты или пароль.");
 
+        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            throw new InvalidCredentialsException("Неверный адрес электронной почты или пароль.");
+
         throw new NotImplementedException();
     }
 }
