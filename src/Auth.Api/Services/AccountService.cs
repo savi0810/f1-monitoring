@@ -20,6 +20,9 @@ public class AccountService : IAccountService
         if (await _userRepository.GetUserByEmailAsync(dto.Email) is not null)
             throw new ConflictException("Пользователь с таким адресом электронной почты уже зарегистрирован.");
 
+        if (await _userRepository.GetUserByUsernameAsync(dto.Username) is not null)
+            throw new ConflictException("Пользователь с таким именем уже существует.");
+
         throw new NotImplementedException();
     }
 
