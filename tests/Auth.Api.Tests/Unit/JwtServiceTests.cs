@@ -49,4 +49,13 @@ public class JwtServiceTests
         Assert.Equal("alice", principal.FindFirst(ClaimTypes.Name)?.Value);
         Assert.Equal("alice@test.com", principal.FindFirst(ClaimTypes.Email)?.Value);
     }
+
+    [Fact]
+    public void GenerateToken_WithoutExpiration_DefaultsToSevenDays()
+    {
+        var token = Create(BaseConfig()).GenerateToken(User());
+
+        var validTo = new JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo;
+        Assert.InRange(validTo, DateTime.UtcNow.AddDays(7).AddMinutes(-1), DateTime.UtcNow.AddDays(7).AddMinutes(1));
+    }
 }
