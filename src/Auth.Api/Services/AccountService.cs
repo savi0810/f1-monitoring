@@ -1,5 +1,6 @@
 using Auth.Api.Data.DTOs;
 using Auth.Api.Data.Repositories;
+using Auth.Api.Exceptions;
 
 namespace Auth.Api.Services;
 
@@ -14,8 +15,11 @@ public class AccountService : IAccountService
         _jwtService = jwtService;
     }
 
-    public Task RegisterAsync(RegisterDto dto)
+    public async Task RegisterAsync(RegisterDto dto)
     {
+        if (await _userRepository.GetUserByEmailAsync(dto.Email) is not null)
+            throw new ConflictException("Пользователь с таким адресом электронной почты уже зарегистрирован.");
+
         throw new NotImplementedException();
     }
 
