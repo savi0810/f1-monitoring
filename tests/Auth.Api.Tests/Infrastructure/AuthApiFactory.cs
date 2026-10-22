@@ -2,6 +2,7 @@ using Auth.Api.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Hosting;
 
 namespace Auth.Api.Tests.Infrastructure;
 
@@ -17,5 +18,12 @@ public class AuthApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services => services.ReplaceWithSqlite<AppDbContext>(_connection));
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        host.Services.EnsureDatabase<AppDbContext>();
+        return host;
     }
 }
