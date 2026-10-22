@@ -37,4 +37,18 @@ public class AccountServiceTests
         await Assert.ThrowsAsync<ConflictException>(() => _service.RegisterAsync(Dto()));
         await _repository.DidNotReceive().AddUserAsync(Arg.Any<User>());
     }
+
+    [Fact]
+    public async Task RegisterAsync_SavesUserWithHashedPassword()
+    {
+        User? saved = null;
+        await _repository.AddUserAsync(Arg.Do<User>(u => saved = u));
+
+        await _service.RegisterAsync(Dto());
+
+        Assert.NotNull(saved);
+        Assert.Equal("alice", saved!.Username);
+        Assert.NotEqual("secret1", saved.PasswordHash);
+        Assert.True(BCrypt.Net.BCrypt.Verify("secret1", saved.PasswordHash));
+    }
 }
