@@ -44,4 +44,10 @@ public class DtoValidationTests
     {
         Assert.False(IsValid(new RegisterDto { Username = "alice", Email = "alice@test.com", Password = password }));
     }
+
+    [Fact]
+    public void LoginDto_Valid_Passes()
+    {
+        Assert.True(IsValid(new LoginDto { Email = "alice@test.com", Password = "secret1" }));
+    }
 }
