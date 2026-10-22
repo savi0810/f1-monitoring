@@ -1,5 +1,7 @@
 using Auth.Api.Data.DTOs;
+using Auth.Api.Data.Models;
 using Auth.Api.Data.Repositories;
+using Auth.Api.Exceptions;
 using Auth.Api.Services;
 using NSubstitute;
 
@@ -17,4 +19,13 @@ public class AccountServiceTests
     }
 
     private static RegisterDto Dto() => new() { Username = "alice", Email = "alice@test.com", Password = "secret1" };
+
+    [Fact]
+    public async Task RegisterAsync_DuplicateEmail_ThrowsConflict()
+    {
+        _repository.GetUserByEmailAsync("alice@test.com").Returns(new User());
+
+        await Assert.ThrowsAsync<ConflictException>(() => _service.RegisterAsync(Dto()));
+        await _repository.DidNotReceive().AddUserAsync(Arg.Any<User>());
+    }
 }
