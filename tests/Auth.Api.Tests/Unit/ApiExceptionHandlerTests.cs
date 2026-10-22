@@ -30,4 +30,14 @@ public class ApiExceptionHandlerTests
         Assert.True(handled);
         Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
     }
+
+    [Fact]
+    public async Task UnknownException_IsNotHandled()
+    {
+        var context = new DefaultHttpContext();
+
+        var handled = await _handler.TryHandleAsync(context, new Exception("boom"), CancellationToken.None);
+
+        Assert.False(handled);
+    }
 }
