@@ -70,4 +70,12 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Login_UnknownUser_ReturnsUnauthorized()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new { email = "ghost-" + Guid.NewGuid().ToString("N")[..8] + "@test.com", password = "secret1" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
