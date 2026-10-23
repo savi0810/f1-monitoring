@@ -59,4 +59,15 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
         var token = await response.Content.ReadFromJsonAsync<TokenDto>();
         Assert.Equal(3, token!.AccessToken.Split('.').Length);
     }
+
+    [Fact]
+    public async Task Login_WrongPassword_ReturnsUnauthorized()
+    {
+        var name = "u" + Guid.NewGuid().ToString("N")[..10];
+        await _client.PostAsJsonAsync("/api/auth/register", NewUser(name));
+
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new { email = name + "@test.com", password = "wrong-pass" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
