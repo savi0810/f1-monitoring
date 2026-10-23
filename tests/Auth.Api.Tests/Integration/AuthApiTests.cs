@@ -26,4 +26,15 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Register_DuplicateUser_ReturnsConflict()
+    {
+        var user = NewUser();
+        await _client.PostAsJsonAsync("/api/auth/register", user);
+
+        var response = await _client.PostAsJsonAsync("/api/auth/register", user);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
 }
