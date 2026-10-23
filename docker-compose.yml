@@ -1,4 +1,19 @@
 services:
+  postgres-auth:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   auth-api:
     build:
       context: .
@@ -53,3 +68,6 @@ services:
       - telemetry-api
       - alerts-api
       - live-api
+
+volumes:
+  postgres_auth_data:
