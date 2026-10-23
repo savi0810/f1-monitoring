@@ -1,4 +1,19 @@
 services:
+  postgres-auth:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   auth-api:
     build:
       context: .
@@ -6,8 +21,13 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres-auth;Port=5432;Database=authdb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__Key: ${JWT_KEY}
     ports:
       - "5185:8080"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
 
   telemetry-api:
     build:
@@ -53,3 +73,6 @@ services:
       - telemetry-api
       - alerts-api
       - live-api
+
+volumes:
+  postgres_auth_data:
