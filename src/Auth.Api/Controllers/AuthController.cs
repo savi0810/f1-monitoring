@@ -21,4 +21,11 @@ public class AuthController : ControllerBase
         await _accountService.RegisterAsync(dto);
         return Ok();
     }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<TokenDto>> Login([FromBody] LoginDto dto)
+    {
+        var token = await _accountService.LoginAsync(dto);
+        return Ok(token);
+    }
 }
