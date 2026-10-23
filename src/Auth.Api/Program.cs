@@ -1,4 +1,5 @@
 using Auth.Api.Data;
+using Auth.Api.Exceptions;
 using Auth.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -14,6 +15,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddAuthServices(builder.Configuration);
 
 var app = builder.Build();

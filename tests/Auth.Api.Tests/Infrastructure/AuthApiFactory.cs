@@ -17,6 +17,7 @@ public class AuthApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting("Jwt:Key", "integration-tests-signing-key-1234567890");
         builder.ConfigureServices(services => services.ReplaceWithSqlite<AppDbContext>(_connection));
     }
 
