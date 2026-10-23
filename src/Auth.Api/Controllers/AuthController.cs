@@ -1,3 +1,4 @@
+using Auth.Api.Data.DTOs;
 using Auth.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,5 +13,12 @@ public class AuthController : ControllerBase
     public AuthController(IAccountService accountService)
     {
         _accountService = accountService;
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    {
+        await _accountService.RegisterAsync(dto);
+        return Ok();
     }
 }
