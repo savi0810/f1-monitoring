@@ -43,7 +43,7 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 | Сервис | Запрос | Что делает |
 |--------|--------|-----------|
 | Auth.Api | `POST /api/auth/register` | Регистрация |
-| Auth.Api | `POST /api/auth/login` | Вход, выдача JWT |
+| Auth.Api | `POST /api/auth/login` | Вход по email и паролю, выдача JWT |
 | Telemetry.Api | `GET /api/telemetry/races` | Список гонок |
 | Telemetry.Api | `GET /api/telemetry/races/{id}` | Данные выбранной гонки |
 | Telemetry.Api | `GET /api/telemetry/compare` | Сравнение двух пилотов |
@@ -55,7 +55,7 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 ## 5. Модель данных
 
 Предварительно:
-- `authdb`: пользователи (id, email, хеш пароля).
+- `authdb`: пользователи (id, имя, email, хеш пароля).
 - `telemetrydb`: гонки, события гонок.
 - `alertsdb`: правила, избранные пилоты, журнал уведомлений.
 - Redis: снимок текущей гонки.
