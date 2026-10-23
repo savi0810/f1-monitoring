@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Auth.Api.Data.DTOs;
 using Auth.Api.Tests.Infrastructure;
 
 namespace Auth.Api.Tests.Integration;
@@ -44,5 +45,18 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
         var response = await _client.PostAsJsonAsync("/api/auth/register", new { username = "a", email = "bad", password = "1" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_ValidCredentials_ReturnsJwt()
+    {
+        var name = "u" + Guid.NewGuid().ToString("N")[..10];
+        await _client.PostAsJsonAsync("/api/auth/register", NewUser(name));
+
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new { email = name + "@test.com", password = "secret1" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var token = await response.Content.ReadFromJsonAsync<TokenDto>();
+        Assert.Equal(3, token!.AccessToken.Split('.').Length);
     }
 }
