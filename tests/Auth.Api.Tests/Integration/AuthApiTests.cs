@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http.Json;
 using Auth.Api.Tests.Infrastructure;
 
 namespace Auth.Api.Tests.Integration;
@@ -15,5 +17,13 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
     {
         var username = name ?? "u" + Guid.NewGuid().ToString("N")[..10];
         return new { username, email = username + "@test.com", password = "secret1" };
+    }
+
+    [Fact]
+    public async Task Register_ValidUser_ReturnsOk()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/register", NewUser());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }
