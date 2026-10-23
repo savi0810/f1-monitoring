@@ -37,4 +37,12 @@ public class AuthApiTests : IClassFixture<AuthApiFactory>
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Register_InvalidBody_ReturnsBadRequest()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/register", new { username = "a", email = "bad", password = "1" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
