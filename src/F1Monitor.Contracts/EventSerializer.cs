@@ -8,4 +8,8 @@ public static class EventSerializer
 
     public static string Serialize(RaceEvent raceEvent) =>
         JsonSerializer.Serialize(raceEvent, Options);
+
+    public static RaceEvent Deserialize(string json) =>
+        JsonSerializer.Deserialize<RaceEvent>(json, Options)
+            ?? throw new JsonException("Event is empty.");
 }
