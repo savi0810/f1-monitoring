@@ -1,5 +1,6 @@
 using F1.Collector.Extensions;
 using F1.Collector.OpenF1;
+using F1.Collector.Publishing;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,8 @@ builder.Services.AddHttpClient<OpenF1Client>(client =>
 });
 
 var app = builder.Build();
+
+await app.Services.GetRequiredService<EventPublisher>().DeclareQueueAsync();
 
 app.UseSerilogRequestLogging();
 
