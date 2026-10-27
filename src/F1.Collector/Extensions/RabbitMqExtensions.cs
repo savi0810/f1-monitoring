@@ -1,3 +1,5 @@
+using F1.Collector.Publishing;
+using F1Monitor.Contracts;
 using RabbitMQ.Client;
 
 namespace F1.Collector.Extensions;
@@ -27,6 +29,8 @@ public static class RabbitMqExtensions
 
             return connection.CreateChannelAsync(options).GetAwaiter().GetResult();
         });
+
+        services.AddSingleton(sp => new EventPublisher(sp.GetRequiredService<IChannel>(), QueueNames.F1Events));
 
         return services;
     }
