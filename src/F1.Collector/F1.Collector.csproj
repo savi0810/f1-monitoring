@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="System.Threading.RateLimiting" Version="10.0.14" />
   </ItemGroup>
 
 </Project>
