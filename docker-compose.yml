@@ -78,8 +78,12 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_URLS: http://+:8080
+      RabbitMq__Host: rabbitmq
     ports:
       - "5301:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   gateway-api:
     build:
