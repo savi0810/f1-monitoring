@@ -12,4 +12,12 @@ public class EventPublisher
         _channel = channel;
         _queueName = queueName;
     }
+
+    public Task DeclareQueueAsync(CancellationToken cancellationToken = default) =>
+        _channel.QueueDeclareAsync(
+            queue: _queueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
 }
