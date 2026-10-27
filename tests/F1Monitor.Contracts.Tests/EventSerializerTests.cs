@@ -47,4 +47,23 @@ public class EventSerializerTests
         Assert.Contains("\"lapNumber\"", json);
         Assert.DoesNotContain("\"EventId\"", json);
     }
+
+    [Fact]
+    public void Event_WithoutDriverAndLapTime_SurvivesRoundTrip()
+    {
+        var original = new RaceEvent(
+            Guid.NewGuid(),
+            EventTypes.LapCompleted,
+            11388,
+            null,
+            DateTimeOffset.UtcNow,
+            EventSerializer.WritePayload(new LapCompletedPayload(1, null, null, null, null, true)));
+
+        var restored = EventSerializer.Deserialize(EventSerializer.Serialize(original));
+        var lap = EventSerializer.ReadPayload<LapCompletedPayload>(restored);
+
+        Assert.Null(restored.DriverNumber);
+        Assert.Null(lap.LapDuration);
+        Assert.True(lap.IsPitOutLap);
+    }
 }
