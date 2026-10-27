@@ -1,3 +1,4 @@
+using F1.Collector.Extensions;
 using F1.Collector.OpenF1;
 using Serilog;
 
@@ -10,6 +11,7 @@ builder.Host.UseSerilog((context, configuration) =>
 
 builder.Services.AddHealthChecks();
 builder.Services.AddSingleton<OpenF1RateLimiter>();
+builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHttpClient<OpenF1Client>(client =>
 {
     client.BaseAddress = new Uri("https://api.openf1.org/v1/");
