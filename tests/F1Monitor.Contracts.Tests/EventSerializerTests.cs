@@ -74,4 +74,18 @@ public class EventSerializerTests
     {
         Assert.Throws<JsonException>(() => EventSerializer.Deserialize("null"));
     }
+
+    [Fact]
+    public void ReadPayload_NullPayload_Throws()
+    {
+        var raceEvent = new RaceEvent(
+            Guid.NewGuid(),
+            EventTypes.LapCompleted,
+            11388,
+            3,
+            DateTimeOffset.UtcNow,
+            EventSerializer.WritePayload<LapCompletedPayload?>(null));
+
+        Assert.Throws<JsonException>(() => EventSerializer.ReadPayload<LapCompletedPayload>(raceEvent));
+    }
 }
