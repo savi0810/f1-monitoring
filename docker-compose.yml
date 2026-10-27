@@ -60,7 +60,7 @@ services:
       - "5052:8080"
 
   rabbitmq:
-    image: rabbitmq:4-management-alpine
+    image: rabbitmq:4-management
     restart: unless-stopped
     ports:
       - "5672:5672"
