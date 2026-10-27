@@ -5,9 +5,11 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY src/F1.Collector/F1.Collector.csproj src/F1.Collector/
+COPY src/F1Monitor.Contracts/F1Monitor.Contracts.csproj src/F1Monitor.Contracts/
 RUN dotnet restore src/F1.Collector/F1.Collector.csproj
 
 COPY src/F1.Collector/ src/F1.Collector/
+COPY src/F1Monitor.Contracts/ src/F1Monitor.Contracts/
 
 WORKDIR /src/src/F1.Collector
 RUN dotnet publish F1.Collector.csproj -c Release -o /app/publish /p:UseAppHost=false

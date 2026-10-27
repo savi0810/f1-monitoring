@@ -59,6 +59,18 @@ services:
     ports:
       - "5052:8080"
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   f1-collector:
     build:
       context: .
@@ -66,8 +78,12 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_URLS: http://+:8080
+      RabbitMq__Host: rabbitmq
     ports:
       - "5301:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   gateway-api:
     build:
