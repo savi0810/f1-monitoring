@@ -1,0 +1,36 @@
+using F1.Collector.Publishing;
+using F1Monitor.Contracts;
+using NSubstitute;
+using RabbitMQ.Client;
+
+namespace F1.Collector.Tests.Publishing;
+
+public class EventPublisherTests
+{
+    [Fact]
+    public async Task PublishBatchAsync_PublishesEachEventAsPersistent()
+    {
+        var channel = Substitute.For<IChannel>();
+        var publisher = new EventPublisher(channel, "f1.events");
+        var events = new[]
+        {
+            new RaceEvent(
+                Guid.NewGuid(),
+                EventTypes.LapCompleted,
+                11396,
+                1,
+                DateTimeOffset.UtcNow,
+                EventSerializer.WritePayload(new LapCompletedPayload(1, 100, 30, 40, 30, false)))
+        };
+
+        await publisher.PublishBatchAsync(events);
+
+        await channel.Received(1).BasicPublishAsync(
+            exchange: string.Empty,
+            routingKey: "f1.events",
+            mandatory: true,
+            basicProperties: Arg.Is<BasicProperties>(p => p.Persistent),
+            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+}
