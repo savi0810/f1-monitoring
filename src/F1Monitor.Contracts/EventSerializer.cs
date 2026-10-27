@@ -13,6 +13,9 @@ public static class EventSerializer
         JsonSerializer.Deserialize<RaceEvent>(json, Options)
             ?? throw new JsonException("Event is empty.");
 
+    public static JsonElement WritePayload<T>(T payload) =>
+        JsonSerializer.SerializeToElement(payload, Options);
+
     public static T ReadPayload<T>(RaceEvent raceEvent) =>
         raceEvent.Payload.Deserialize<T>(Options)
             ?? throw new JsonException("Payload is empty.");
