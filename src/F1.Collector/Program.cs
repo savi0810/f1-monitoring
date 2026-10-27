@@ -1,3 +1,4 @@
+using F1.Collector.Consuming;
 using F1.Collector.Extensions;
 using F1.Collector.OpenF1;
 using F1.Collector.Publishing;
@@ -17,6 +18,7 @@ builder.Services.AddHttpClient<OpenF1Client>(client =>
 {
     client.BaseAddress = new Uri("https://api.openf1.org/v1/");
 });
+builder.Services.AddHostedService<ImportRequestedConsumer>();
 
 var app = builder.Build();
 

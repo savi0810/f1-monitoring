@@ -76,6 +76,16 @@ public class EventSerializerTests
     }
 
     [Fact]
+    public void GenericSerializeThenDeserialize_RestoresMessage()
+    {
+        var original = new ImportRequested(11396);
+
+        var restored = EventSerializer.Deserialize<ImportRequested>(EventSerializer.Serialize(original));
+
+        Assert.Equal(original.SessionKey, restored.SessionKey);
+    }
+
+    [Fact]
     public void ReadPayload_NullPayload_Throws()
     {
         var raceEvent = new RaceEvent(
