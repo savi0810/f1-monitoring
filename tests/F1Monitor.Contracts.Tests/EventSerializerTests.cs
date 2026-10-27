@@ -23,4 +23,17 @@ public class EventSerializerTests
         Assert.Equal(original.DriverNumber, restored.DriverNumber);
         Assert.Equal(original.OccurredAt, restored.OccurredAt);
     }
+
+    [Fact]
+    public void ReadPayload_ReturnsLapData()
+    {
+        var raceEvent = EventSerializer.Deserialize(EventSerializer.Serialize(NewEvent()));
+
+        var lap = EventSerializer.ReadPayload<LapCompletedPayload>(raceEvent);
+
+        Assert.Equal(5, lap.LapNumber);
+        Assert.Equal(98.4, lap.LapDuration);
+        Assert.Equal(30.1, lap.Sector1Duration);
+        Assert.False(lap.IsPitOutLap);
+    }
 }
