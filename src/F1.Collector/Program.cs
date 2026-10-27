@@ -1,3 +1,4 @@
+using F1.Collector.OpenF1;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,10 @@ builder.Host.UseSerilog((context, configuration) =>
         .WriteTo.Console());
 
 builder.Services.AddHealthChecks();
+builder.Services.AddHttpClient<OpenF1Client>(client =>
+{
+    client.BaseAddress = new Uri("https://api.openf1.org/v1/");
+});
 
 var app = builder.Build();
 
