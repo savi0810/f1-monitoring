@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace F1Monitor.Contracts.Tests;
 
 public class EventSerializerTests
@@ -65,5 +67,11 @@ public class EventSerializerTests
         Assert.Null(restored.DriverNumber);
         Assert.Null(lap.LapDuration);
         Assert.True(lap.IsPitOutLap);
+    }
+
+    [Fact]
+    public void Deserialize_NullJson_Throws()
+    {
+        Assert.Throws<JsonException>(() => EventSerializer.Deserialize("null"));
     }
 }
