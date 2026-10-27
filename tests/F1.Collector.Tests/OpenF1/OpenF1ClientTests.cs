@@ -13,4 +13,22 @@ public class OpenF1ClientTests
 
         return new OpenF1Client(httpClient);
     }
+
+    [Fact]
+    public async Task GetLapsAsync_ReturnsLaps()
+    {
+        const string json = """
+        [
+          {"session_key":11388,"driver_number":3,"lap_number":1,"date_start":"2026-10-11T12:03:39.077000+00:00","lap_duration":102.675,"duration_sector_1":32.691,"duration_sector_2":41.59,"duration_sector_3":28.394,"is_pit_out_lap":false}
+        ]
+        """;
+        var client = CreateClient(HttpStatusCode.OK, json);
+
+        var laps = await client.GetLapsAsync(11388);
+
+        Assert.Single(laps);
+        Assert.Equal(1, laps[0].LapNumber);
+        Assert.Equal(102.675, laps[0].LapDuration);
+        Assert.False(laps[0].IsPitOutLap);
+    }
 }
