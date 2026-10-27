@@ -59,6 +59,16 @@ services:
     ports:
       - "5052:8080"
 
+  f1-collector:
+    build:
+      context: .
+      dockerfile: src/F1.Collector/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5301:8080"
+
   gateway-api:
     build:
       context: .
