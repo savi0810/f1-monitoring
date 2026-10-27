@@ -26,6 +26,12 @@ public class OpenF1RateLimiter : IAsyncDisposable
         });
     }
 
+    public async Task WaitAsync(CancellationToken cancellationToken = default)
+    {
+        using var secondLease = await _perSecondLimiter.AcquireAsync(1, cancellationToken);
+        using var minuteLease = await _perMinuteLimiter.AcquireAsync(1, cancellationToken);
+    }
+
     public async ValueTask DisposeAsync()
     {
         _perSecondLimiter.Dispose();
