@@ -18,6 +18,16 @@ public static class RabbitMqExtensions
             return factory.CreateConnectionAsync().GetAwaiter().GetResult();
         });
 
+        services.AddSingleton(sp =>
+        {
+            var connection = sp.GetRequiredService<IConnection>();
+            var options = new CreateChannelOptions(
+                publisherConfirmationsEnabled: true,
+                publisherConfirmationTrackingEnabled: true);
+
+            return connection.CreateChannelAsync(options).GetAwaiter().GetResult();
+        });
+
         return services;
     }
 }
