@@ -1,8 +1,10 @@
+using System.Text;
 using F1.Collector.Mapping;
 using F1.Collector.OpenF1;
 using F1.Collector.Publishing;
 using F1Monitor.Contracts;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace F1.Collector.Consuming;
 
@@ -27,5 +29,26 @@ public class ImportRequestedConsumer : BackgroundService
         await _eventPublisher.PublishBatchAsync(events, cancellationToken);
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.CompletedTask;
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await _channel.QueueDeclareAsync(
+            queue: QueueNames.ImportRequested,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+
+        var consumer = new AsyncEventingBasicConsumer(_channel);
+        consumer.ReceivedAsync += async (_, args) =>
+        {
+            var json = Encoding.UTF8.GetString(args.Body.Span);
+            var request = EventSerializer.Deserialize<ImportRequested>(json);
+
+            await HandleImportRequestedAsync(request, stoppingToken);
+
+            await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
+        };
+
+        await _channel.BasicConsumeAsync(QueueNames.ImportRequested, autoAck: false, consumer, stoppingToken);
+    }
 }
