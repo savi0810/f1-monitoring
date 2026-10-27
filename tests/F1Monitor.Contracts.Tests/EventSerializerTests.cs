@@ -36,4 +36,15 @@ public class EventSerializerTests
         Assert.Equal(30.1, lap.Sector1Duration);
         Assert.False(lap.IsPitOutLap);
     }
+
+    [Fact]
+    public void Serialize_UsesCamelCaseNames()
+    {
+        var json = EventSerializer.Serialize(NewEvent());
+
+        Assert.Contains("\"eventId\"", json);
+        Assert.Contains("\"sessionKey\"", json);
+        Assert.Contains("\"lapNumber\"", json);
+        Assert.DoesNotContain("\"EventId\"", json);
+    }
 }
