@@ -31,4 +31,13 @@ public class OpenF1ClientTests
         Assert.Equal(102.675, laps[0].LapDuration);
         Assert.False(laps[0].IsPitOutLap);
     }
+
+    [Fact]
+    public async Task GetLapsAsync_Returns401_ThrowsLiveSessionException()
+    {
+        const string body = """{"detail":"Live F1 session in progress."}""";
+        var client = CreateClient(HttpStatusCode.Unauthorized, body);
+
+        await Assert.ThrowsAsync<OpenF1LiveSessionException>(() => client.GetLapsAsync(11388));
+    }
 }
