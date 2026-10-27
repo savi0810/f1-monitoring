@@ -10,8 +10,9 @@ public class OpenF1ClientTests
     {
         var handler = new FakeHttpMessageHandler(statusCode, content);
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
+        var rateLimiter = new OpenF1RateLimiter();
 
-        return new OpenF1Client(httpClient);
+        return new OpenF1Client(httpClient, rateLimiter);
     }
 
     [Fact]
