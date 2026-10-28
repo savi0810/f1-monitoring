@@ -54,4 +54,62 @@ public class LapEventConsumerTests : IDisposable
         var repository = new LapRepository(_db.Create());
         Assert.Empty(await repository.GetSessionsAsync());
     }
+
+    [Fact]
+    public async Task StartAsync_DeclaresDurableTopicExchange()
+    {
+        var channel = Substitute.For<IChannel>();
+        var consumer = new LapEventConsumer(channel, _provider.GetRequiredService<IServiceScopeFactory>());
+
+        await consumer.StartAsync(CancellationToken.None);
+        await consumer.ExecuteTask!;
+
+        await channel.Received(1).ExchangeDeclareAsync(
+            exchange: "f1.events",
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            arguments: null,
+            passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartAsync_BindsTelemetryQueueToExchangeWithAllEvents()
+    {
+        var channel = Substitute.For<IChannel>();
+        var consumer = new LapEventConsumer(channel, _provider.GetRequiredService<IServiceScopeFactory>());
+
+        await consumer.StartAsync(CancellationToken.None);
+        await consumer.ExecuteTask!;
+
+        await channel.Received(1).QueueBindAsync(
+            queue: "telemetry.events",
+            exchange: "f1.events",
+            routingKey: "#",
+            arguments: null,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartAsync_ConsumesTelemetryEventsQueue()
+    {
+        var channel = Substitute.For<IChannel>();
+        var consumer = new LapEventConsumer(channel, _provider.GetRequiredService<IServiceScopeFactory>());
+
+        await consumer.StartAsync(CancellationToken.None);
+        await consumer.ExecuteTask!;
+
+        await channel.Received(1).BasicConsumeAsync(
+            queue: "telemetry.events",
+            autoAck: false,
+            consumerTag: Arg.Any<string>(),
+            noLocal: false,
+            exclusive: false,
+            arguments: null,
+            consumer: Arg.Any<IAsyncBasicConsumer>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }

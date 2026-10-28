@@ -14,18 +14,15 @@ public class LapRepository : ILapRepository
 
     public async Task<bool> AddLapAsync(Lap lap)
     {
-        await _context.Laps.AddAsync(lap);
+        var inserted = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "Laps" ("EventId", "SessionKey", "DriverNumber", "LapNumber", "LapDuration",
+                                "Sector1Duration", "Sector2Duration", "Sector3Duration", "IsPitOutLap", "OccurredAt")
+            VALUES ({lap.EventId}, {lap.SessionKey}, {lap.DriverNumber}, {lap.LapNumber}, {lap.LapDuration},
+                    {lap.Sector1Duration}, {lap.Sector2Duration}, {lap.Sector3Duration}, {lap.IsPitOutLap}, {lap.OccurredAt.ToUniversalTime()})
+            ON CONFLICT ("EventId") DO NOTHING
+            """);
 
-        try
-        {
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        catch (DbUpdateException)
-        {
-            _context.Entry(lap).State = EntityState.Detached;
-            return false;
-        }
+        return inserted > 0;
     }
 
     public async Task<IReadOnlyList<SessionSummary>> GetSessionsAsync()

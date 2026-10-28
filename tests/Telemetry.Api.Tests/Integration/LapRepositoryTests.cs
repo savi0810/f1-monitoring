@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Telemetry.Api.Data;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
@@ -42,6 +43,15 @@ public class LapRepositoryTests : IDisposable
         var addedAgain = await new LapRepository(_db.Create()).AddLapAsync(NewLap(eventId));
 
         Assert.False(addedAgain);
+    }
+
+    [Fact]
+    public async Task AddLapAsync_DatabaseError_Rethrows()
+    {
+        await using var context = _db.Create();
+        await context.Database.ExecuteSqlRawAsync("DROP TABLE \"Laps\"");
+
+        await Assert.ThrowsAnyAsync<Exception>(() => new LapRepository(context).AddLapAsync(NewLap(Guid.NewGuid())));
     }
 
     [Fact]
