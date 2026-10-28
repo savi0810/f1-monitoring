@@ -20,7 +20,11 @@ public class ImportRequestedConsumerTests
           {"session_key":11396,"driver_number":1,"lap_number":2,"date_start":"2026-10-25T20:05:35.960000+00:00","lap_duration":105.1,"duration_sector_1":30.1,"duration_sector_2":40.1,"duration_sector_3":34.9,"is_pit_out_lap":false}
         ]
         """;
-        var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, json);
+        const string sessionJson = """
+        [{"session_key":11396,"session_type":"Race","session_name":"Race","date_start":"2026-10-25T20:00:00+00:00","date_end":"2026-10-25T22:00:00+00:00","meeting_key":1297,"circuit_short_name":"Austin","country_name":"United States","year":2026,"is_cancelled":false}]
+        """;
+        var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, json)
+            .WithRoute("sessions", HttpStatusCode.OK, sessionJson);
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();

@@ -23,8 +23,12 @@ public class ImportRequestedConsumer : BackgroundService
 
     public async Task HandleImportRequestedAsync(ImportRequested request, CancellationToken cancellationToken = default)
     {
+        var session = await _openF1Client.GetSessionAsync(request.SessionKey, cancellationToken);
+        if (session is null)
+            return;
+
         var laps = await _openF1Client.GetLapsAsync(request.SessionKey, cancellationToken);
-        var events = laps.Select(LapEventMapper.Map);
+        var events = laps.Select(lap => LapEventMapper.Map(lap, session));
 
         await _eventPublisher.PublishToExchangeAsync(events, RoutingKeys.History, cancellationToken);
     }
