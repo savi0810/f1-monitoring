@@ -30,4 +30,21 @@ public class OpenF1Client
             throw new OpenF1LiveSessionException("OpenF1 free access is restricted while a live session is in progress.");
         }
     }
+
+    public async Task<OpenF1Session?> GetSessionAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var sessions = await _httpClient.GetFromJsonAsync<List<OpenF1Session>>(
+                $"sessions?session_key={sessionKey}", cancellationToken);
+
+            return sessions?.FirstOrDefault();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
 }
