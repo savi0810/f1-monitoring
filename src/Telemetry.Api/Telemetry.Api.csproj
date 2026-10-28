@@ -18,4 +18,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.3.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\F1Monitor.Contracts\F1Monitor.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>
