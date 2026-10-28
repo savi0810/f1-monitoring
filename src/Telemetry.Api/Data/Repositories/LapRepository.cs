@@ -28,7 +28,7 @@ public class LapRepository : ILapRepository
         }
     }
 
-    public async Task<IReadOnlyList<SessionSummary>> GetRacesAsync()
+    public async Task<IReadOnlyList<SessionSummary>> GetSessionsAsync()
     {
         var sessionTimestamps = await _context.Laps
             .Select(l => new { l.SessionKey, l.OccurredAt })

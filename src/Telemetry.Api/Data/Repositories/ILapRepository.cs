@@ -5,6 +5,6 @@ namespace Telemetry.Api.Data.Repositories;
 public interface ILapRepository
 {
     Task<bool> AddLapAsync(Lap lap);
-    Task<IReadOnlyList<SessionSummary>> GetRacesAsync();
+    Task<IReadOnlyList<SessionSummary>> GetSessionsAsync();
     Task<IReadOnlyList<Lap>> GetLapsBySessionKeyAsync(int sessionKey);
 }

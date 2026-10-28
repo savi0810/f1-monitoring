@@ -45,14 +45,14 @@ public class LapRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetRacesAsync_GroupsLapsBySessionKey()
+    public async Task GetSessionsAsync_GroupsLapsBySessionKey()
     {
         var repository = new LapRepository(_db.Create());
         await repository.AddLapAsync(NewLap(Guid.NewGuid(), sessionKey: 11396, lapNumber: 1));
         await repository.AddLapAsync(NewLap(Guid.NewGuid(), sessionKey: 11396, lapNumber: 2));
         await repository.AddLapAsync(NewLap(Guid.NewGuid(), sessionKey: 9999, lapNumber: 1));
 
-        var races = await new LapRepository(_db.Create()).GetRacesAsync();
+        var races = await new LapRepository(_db.Create()).GetSessionsAsync();
 
         var race = Assert.Single(races, r => r.SessionKey == 11396);
         Assert.Equal(2, race.LapCount);
