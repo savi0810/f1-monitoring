@@ -5,9 +5,11 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY src/Telemetry.Api/Telemetry.Api.csproj src/Telemetry.Api/
+COPY src/F1Monitor.Contracts/F1Monitor.Contracts.csproj src/F1Monitor.Contracts/
 RUN dotnet restore src/Telemetry.Api/Telemetry.Api.csproj
 
 COPY src/Telemetry.Api/ src/Telemetry.Api/
+COPY src/F1Monitor.Contracts/ src/F1Monitor.Contracts/
 
 WORKDIR /src/src/Telemetry.Api
 RUN dotnet publish Telemetry.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
