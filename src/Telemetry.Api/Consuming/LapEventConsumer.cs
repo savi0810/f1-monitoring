@@ -34,6 +34,13 @@ public class LapEventConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await _channel.ExchangeDeclareAsync(
+            exchange: ExchangeNames.F1Events,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+
         await _channel.QueueDeclareAsync(
             queue: QueueNames.F1Events,
             durable: true,
