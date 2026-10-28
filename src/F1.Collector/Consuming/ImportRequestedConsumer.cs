@@ -26,7 +26,7 @@ public class ImportRequestedConsumer : BackgroundService
         var laps = await _openF1Client.GetLapsAsync(request.SessionKey, cancellationToken);
         var events = laps.Select(LapEventMapper.Map);
 
-        await _eventPublisher.PublishBatchAsync(events, cancellationToken);
+        await _eventPublisher.PublishToExchangeAsync(events, RoutingKeys.History, cancellationToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

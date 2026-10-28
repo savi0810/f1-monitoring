@@ -30,8 +30,8 @@ public class ImportRequestedConsumerTests
         await consumer.HandleImportRequestedAsync(new ImportRequested(11396));
 
         await channel.Received(2).BasicPublishAsync(
-            exchange: string.Empty,
-            routingKey: QueueNames.F1Events,
+            exchange: ExchangeNames.F1Events,
+            routingKey: "history.lap_completed",
             mandatory: true,
             basicProperties: Arg.Any<BasicProperties>(),
             body: Arg.Any<ReadOnlyMemory<byte>>(),
