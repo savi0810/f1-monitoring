@@ -41,4 +41,23 @@ public class OpenF1ClientTests
 
         await Assert.ThrowsAsync<OpenF1LiveSessionException>(() => client.GetLapsAsync(11388));
     }
+
+    [Fact]
+    public async Task GetSessionAsync_ReturnsSession()
+    {
+        const string json = """
+        [
+          {"session_key":11396,"session_type":"Race","session_name":"Race","date_start":"2026-10-25T20:00:00+00:00","date_end":"2026-10-25T22:00:00+00:00","meeting_key":1297,"circuit_key":9,"circuit_short_name":"Austin","country_key":19,"country_code":"USA","country_name":"United States","location":"Austin","gmt_offset":"-05:00:00","year":2026,"is_cancelled":false}
+        ]
+        """;
+        var client = CreateClient(HttpStatusCode.OK, json);
+
+        var session = await client.GetSessionAsync(11396);
+
+        Assert.NotNull(session);
+        Assert.Equal(1297, session.MeetingKey);
+        Assert.Equal("Race", session.SessionType);
+        Assert.Equal("Austin", session.CircuitShortName);
+        Assert.False(session.IsCancelled);
+    }
 }
