@@ -62,6 +62,7 @@ public class LapEventConsumerTests : IDisposable
         var consumer = new LapEventConsumer(channel, _provider.GetRequiredService<IServiceScopeFactory>());
 
         await consumer.StartAsync(CancellationToken.None);
+        await consumer.ExecuteTask!;
 
         await channel.Received(1).ExchangeDeclareAsync(
             exchange: "f1.events",
@@ -70,6 +71,24 @@ public class LapEventConsumerTests : IDisposable
             autoDelete: false,
             arguments: null,
             passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task StartAsync_BindsTelemetryQueueToExchangeWithAllEvents()
+    {
+        var channel = Substitute.For<IChannel>();
+        var consumer = new LapEventConsumer(channel, _provider.GetRequiredService<IServiceScopeFactory>());
+
+        await consumer.StartAsync(CancellationToken.None);
+        await consumer.ExecuteTask!;
+
+        await channel.Received(1).QueueBindAsync(
+            queue: "telemetry.events",
+            exchange: "f1.events",
+            routingKey: "#",
+            arguments: null,
             noWait: false,
             cancellationToken: Arg.Any<CancellationToken>());
     }
