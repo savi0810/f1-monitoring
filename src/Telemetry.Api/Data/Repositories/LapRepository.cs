@@ -30,7 +30,11 @@ public class LapRepository : ILapRepository
 
     public async Task<IReadOnlyList<RaceSummary>> GetRacesAsync()
     {
-        return await _context.Laps
+        var sessionTimestamps = await _context.Laps
+            .Select(l => new { l.SessionKey, l.OccurredAt })
+            .ToListAsync();
+
+        return sessionTimestamps
             .GroupBy(l => l.SessionKey)
             .Select(g => new RaceSummary(
                 g.Key,
@@ -38,7 +42,7 @@ public class LapRepository : ILapRepository
                 g.Min(l => l.OccurredAt),
                 g.Max(l => l.OccurredAt)))
             .OrderByDescending(r => r.EndedAt)
-            .ToListAsync();
+            .ToList();
     }
 
     public async Task<IReadOnlyList<Lap>> GetLapsBySessionKeyAsync(int sessionKey)
