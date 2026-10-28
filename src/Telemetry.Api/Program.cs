@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Telemetry.Api.Consuming;
 using Telemetry.Api.Data;
 using Telemetry.Api.Extensions;
 
@@ -15,6 +16,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddTelemetryServices(builder.Configuration);
+builder.Services.AddRabbitMq(builder.Configuration);
+builder.Services.AddHostedService<LapEventConsumer>();
 
 var app = builder.Build();
 
