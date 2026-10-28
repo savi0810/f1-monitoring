@@ -17,6 +17,8 @@ public sealed class SqliteDb<TContext> : IDisposable where TContext : DbContext
         context.Database.EnsureCreated();
     }
 
+    public DbContextOptions<TContext> Options => _options;
+
     public TContext Create() => (TContext)Activator.CreateInstance(typeof(TContext), _options)!;
 
     public void Dispose() => _connection.Dispose();

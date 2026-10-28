@@ -24,7 +24,11 @@ public class LapRepository : ILapRepository
         catch (DbUpdateException)
         {
             _context.Entry(lap).State = EntityState.Detached;
-            return false;
+
+            if (await _context.Laps.AsNoTracking().AnyAsync(l => l.EventId == lap.EventId))
+                return false;
+
+            throw;
         }
     }
 
