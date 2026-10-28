@@ -23,23 +23,23 @@ public class TelemetryControllerTests
     }
 
     [Fact]
-    public async Task GetRace_KnownSession_ReturnsLaps()
+    public async Task GetSessionLaps_KnownSession_ReturnsLaps()
     {
         IReadOnlyList<Lap> laps = [new Lap { EventId = Guid.NewGuid(), SessionKey = 11396, LapNumber = 1 }];
         _repository.GetLapsBySessionKeyAsync(11396).Returns(laps);
 
-        var result = await new TelemetryController(_repository).GetRace(11396);
+        var result = await new TelemetryController(_repository).GetSessionLaps(11396);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(laps, ok.Value);
     }
 
     [Fact]
-    public async Task GetRace_UnknownSession_ReturnsNotFound()
+    public async Task GetSessionLaps_UnknownSession_ReturnsNotFound()
     {
         _repository.GetLapsBySessionKeyAsync(1).Returns(Array.Empty<Lap>());
 
-        var result = await new TelemetryController(_repository).GetRace(1);
+        var result = await new TelemetryController(_repository).GetSessionLaps(1);
 
         Assert.IsType<NotFoundResult>(result.Result);
     }
