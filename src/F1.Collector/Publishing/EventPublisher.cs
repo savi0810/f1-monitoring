@@ -54,4 +54,31 @@ public class EventPublisher
             await publishTask;
         }
     }
+
+    public async Task PublishToExchangeAsync(
+        IEnumerable<RaceEvent> events,
+        string source,
+        CancellationToken cancellationToken = default)
+    {
+        var properties = new BasicProperties { Persistent = true };
+        var publishTasks = new List<ValueTask>();
+
+        foreach (var raceEvent in events)
+        {
+            var body = Encoding.UTF8.GetBytes(EventSerializer.Serialize(raceEvent));
+
+            publishTasks.Add(_channel.BasicPublishAsync(
+                exchange: ExchangeNames.F1Events,
+                routingKey: RoutingKeys.For(source, raceEvent.Type),
+                mandatory: true,
+                basicProperties: properties,
+                body: body,
+                cancellationToken: cancellationToken));
+        }
+
+        foreach (var publishTask in publishTasks)
+        {
+            await publishTask;
+        }
+    }
 }
