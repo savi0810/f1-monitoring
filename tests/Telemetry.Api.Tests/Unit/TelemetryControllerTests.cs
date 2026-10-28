@@ -21,4 +21,16 @@ public class TelemetryControllerTests
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(races, ok.Value);
     }
+
+    [Fact]
+    public async Task GetRace_KnownSession_ReturnsLaps()
+    {
+        IReadOnlyList<Lap> laps = [new Lap { EventId = Guid.NewGuid(), SessionKey = 11396, LapNumber = 1 }];
+        _repository.GetLapsBySessionKeyAsync(11396).Returns(laps);
+
+        var result = await new TelemetryController(_repository).GetRace(11396);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Same(laps, ok.Value);
+    }
 }
