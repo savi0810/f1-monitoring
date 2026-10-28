@@ -33,4 +33,21 @@ public class LapEventMapperTests
 
         Assert.Equal(first.EventId, second.EventId);
     }
+
+    [Fact]
+    public void Map_WithSession_SetsSessionFields()
+    {
+        var lap = new OpenF1Lap(11396, 1, 1, DateTimeOffset.UtcNow, 106.254, 30.372, 40.447, 35.435, false);
+        var session = new OpenF1Session(
+            11396, 1297, 2026, "Race", "Race", "Austin", "United States",
+            DateTimeOffset.Parse("2026-10-25T20:00:00+00:00"),
+            DateTimeOffset.Parse("2026-10-25T22:00:00+00:00"),
+            false);
+
+        var raceEvent = LapEventMapper.Map(lap, session);
+
+        Assert.Equal("Race", raceEvent.SessionType);
+        Assert.Equal("Race", raceEvent.SessionName);
+        Assert.Equal(LapEventMapper.Map(lap).EventId, raceEvent.EventId);
+    }
 }
