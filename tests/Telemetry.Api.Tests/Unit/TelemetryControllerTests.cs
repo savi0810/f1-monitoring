@@ -11,15 +11,15 @@ public class TelemetryControllerTests
     private readonly ILapRepository _repository = Substitute.For<ILapRepository>();
 
     [Fact]
-    public async Task GetRaces_ReturnsRacesFromRepository()
+    public async Task GetSessions_ReturnsSessionsFromRepository()
     {
-        IReadOnlyList<SessionSummary> races = [new SessionSummary(11396, 2, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow)];
-        _repository.GetSessionsAsync().Returns(races);
+        IReadOnlyList<SessionSummary> sessions = [new SessionSummary(11396, 2, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow)];
+        _repository.GetSessionsAsync().Returns(sessions);
 
-        var result = await new TelemetryController(_repository).GetRaces();
+        var result = await new TelemetryController(_repository).GetSessions();
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Same(races, ok.Value);
+        Assert.Same(sessions, ok.Value);
     }
 
     [Fact]

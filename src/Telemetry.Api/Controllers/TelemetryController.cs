@@ -15,8 +15,8 @@ public class TelemetryController : ControllerBase
         _lapRepository = lapRepository;
     }
 
-    [HttpGet("races")]
-    public async Task<ActionResult<IReadOnlyList<SessionSummary>>> GetRaces()
+    [HttpGet("sessions")]
+    public async Task<ActionResult<IReadOnlyList<SessionSummary>>> GetSessions()
     {
         return Ok(await _lapRepository.GetSessionsAsync());
     }
