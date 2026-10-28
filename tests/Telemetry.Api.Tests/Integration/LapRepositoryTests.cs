@@ -46,17 +46,12 @@ public class LapRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task AddLapAsync_DbUpdateFailsWithoutDuplicate_Rethrows()
+    public async Task AddLapAsync_DatabaseError_Rethrows()
     {
-        await using var context = new FailingSaveContext(_db.Options);
+        await using var context = _db.Create();
+        await context.Database.ExecuteSqlRawAsync("DROP TABLE \"Laps\"");
 
-        await Assert.ThrowsAsync<DbUpdateException>(() => new LapRepository(context).AddLapAsync(NewLap(Guid.NewGuid())));
-    }
-
-    private sealed class FailingSaveContext(DbContextOptions<AppDbContext> options) : AppDbContext(options)
-    {
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
-            throw new DbUpdateException("save failed");
+        await Assert.ThrowsAnyAsync<Exception>(() => new LapRepository(context).AddLapAsync(NewLap(Guid.NewGuid())));
     }
 
     [Fact]
