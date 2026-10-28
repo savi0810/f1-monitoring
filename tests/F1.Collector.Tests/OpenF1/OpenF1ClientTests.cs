@@ -60,4 +60,15 @@ public class OpenF1ClientTests
         Assert.Equal("Austin", session.CircuitShortName);
         Assert.False(session.IsCancelled);
     }
+
+    [Fact]
+    public async Task GetSessionAsync_Returns404_ReturnsNull()
+    {
+        const string body = """{"detail":"No results found."}""";
+        var client = CreateClient(HttpStatusCode.NotFound, body);
+
+        var session = await client.GetSessionAsync(1);
+
+        Assert.Null(session);
+    }
 }
