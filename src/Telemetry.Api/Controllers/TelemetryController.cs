@@ -20,4 +20,11 @@ public class TelemetryController : ControllerBase
     {
         return Ok(await _lapRepository.GetRacesAsync());
     }
+
+    [HttpGet("races/{sessionKey:int}")]
+    public async Task<ActionResult<IReadOnlyList<Lap>>> GetRace(int sessionKey)
+    {
+        var laps = await _lapRepository.GetLapsBySessionKeyAsync(sessionKey);
+        return laps.Count == 0 ? NotFound() : Ok(laps);
+    }
 }
