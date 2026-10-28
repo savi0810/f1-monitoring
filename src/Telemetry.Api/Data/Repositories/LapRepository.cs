@@ -27,4 +27,17 @@ public class LapRepository : ILapRepository
             return false;
         }
     }
+
+    public async Task<IReadOnlyList<RaceSummary>> GetRacesAsync()
+    {
+        return await _context.Laps
+            .GroupBy(l => l.SessionKey)
+            .Select(g => new RaceSummary(
+                g.Key,
+                g.Count(),
+                g.Min(l => l.OccurredAt),
+                g.Max(l => l.OccurredAt)))
+            .OrderByDescending(r => r.EndedAt)
+            .ToListAsync();
+    }
 }

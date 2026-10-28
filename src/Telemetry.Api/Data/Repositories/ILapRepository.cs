@@ -5,4 +5,5 @@ namespace Telemetry.Api.Data.Repositories;
 public interface ILapRepository
 {
     Task<bool> AddLapAsync(Lap lap);
+    Task<IReadOnlyList<RaceSummary>> GetRacesAsync();
 }
