@@ -29,6 +29,21 @@ services:
       postgres-auth:
         condition: service_healthy
 
+  postgres-telemetry:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: telemetrydb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_telemetry_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d telemetrydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   telemetry-api:
     build:
       context: .
@@ -36,8 +51,15 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres-telemetry;Port=5432;Database=telemetrydb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      RabbitMq__Host: rabbitmq
     ports:
       - "5168:8080"
+    depends_on:
+      postgres-telemetry:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   alerts-api:
     build:
@@ -102,3 +124,4 @@ services:
 
 volumes:
   postgres_auth_data:
+  postgres_telemetry_data:
