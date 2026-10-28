@@ -33,4 +33,14 @@ public class TelemetryControllerTests
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(laps, ok.Value);
     }
+
+    [Fact]
+    public async Task GetRace_UnknownSession_ReturnsNotFound()
+    {
+        _repository.GetLapsBySessionKeyAsync(1).Returns(Array.Empty<Lap>());
+
+        var result = await new TelemetryController(_repository).GetRace(1);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
 }
