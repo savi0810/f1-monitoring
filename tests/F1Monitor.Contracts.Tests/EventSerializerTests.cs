@@ -111,6 +111,20 @@ public class EventSerializerTests
     }
 
     [Fact]
+    public void GenericSerializeThenDeserialize_RestoresSessionAvailable()
+    {
+        var original = new SessionAvailable(
+            11396, 1297, 2026, "Race", "Race", "Austin", "United States",
+            new DateTimeOffset(2026, 10, 25, 20, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 10, 25, 22, 0, 0, TimeSpan.Zero),
+            false);
+
+        var restored = EventSerializer.Deserialize<SessionAvailable>(EventSerializer.Serialize(original));
+
+        Assert.Equal(original, restored);
+    }
+
+    [Fact]
     public void ReadPayload_NullPayload_Throws()
     {
         var raceEvent = new RaceEvent(
