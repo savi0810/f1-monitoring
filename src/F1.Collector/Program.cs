@@ -22,7 +22,7 @@ builder.Services.AddHostedService<ImportRequestedConsumer>();
 
 var app = builder.Build();
 
-await app.Services.GetRequiredService<EventPublisher>().DeclareQueueAsync();
+await app.Services.GetRequiredService<EventPublisher>().DeclareExchangeAsync();
 
 app.UseSerilogRequestLogging();
 

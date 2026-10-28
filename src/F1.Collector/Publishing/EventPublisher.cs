@@ -7,23 +7,24 @@ namespace F1.Collector.Publishing;
 public class EventPublisher
 {
     private readonly IChannel _channel;
-    private readonly string _queueName;
 
-    public EventPublisher(IChannel channel, string queueName)
+    public EventPublisher(IChannel channel)
     {
         _channel = channel;
-        _queueName = queueName;
     }
 
-    public Task DeclareQueueAsync(CancellationToken cancellationToken = default) =>
-        _channel.QueueDeclareAsync(
-            queue: _queueName,
+    public Task DeclareExchangeAsync(CancellationToken cancellationToken = default) =>
+        _channel.ExchangeDeclareAsync(
+            exchange: ExchangeNames.F1Events,
+            type: ExchangeType.Topic,
             durable: true,
-            exclusive: false,
             autoDelete: false,
             cancellationToken: cancellationToken);
 
-    public async Task PublishBatchAsync(IEnumerable<RaceEvent> events, CancellationToken cancellationToken = default)
+    public async Task PublishToExchangeAsync(
+        IEnumerable<RaceEvent> events,
+        string source,
+        CancellationToken cancellationToken = default)
     {
         var properties = new BasicProperties { Persistent = true };
         var publishTasks = new List<ValueTask>();
@@ -33,8 +34,8 @@ public class EventPublisher
             var body = Encoding.UTF8.GetBytes(EventSerializer.Serialize(raceEvent));
 
             publishTasks.Add(_channel.BasicPublishAsync(
-                exchange: string.Empty,
-                routingKey: _queueName,
+                exchange: ExchangeNames.F1Events,
+                routingKey: RoutingKeys.For(source, raceEvent.Type),
                 mandatory: true,
                 basicProperties: properties,
                 body: body,

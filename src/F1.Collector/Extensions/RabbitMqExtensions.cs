@@ -30,7 +30,7 @@ public static class RabbitMqExtensions
             return connection.CreateChannelAsync(options).GetAwaiter().GetResult();
         });
 
-        services.AddSingleton(sp => new EventPublisher(sp.GetRequiredService<IChannel>(), QueueNames.F1Events));
+        services.AddSingleton(sp => new EventPublisher(sp.GetRequiredService<IChannel>()));
 
         return services;
     }

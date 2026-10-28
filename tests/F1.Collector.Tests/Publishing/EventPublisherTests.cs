@@ -8,10 +8,29 @@ namespace F1.Collector.Tests.Publishing;
 public class EventPublisherTests
 {
     [Fact]
-    public async Task PublishBatchAsync_PublishesEachEventAsPersistent()
+    public async Task DeclareExchangeAsync_DeclaresDurableTopicExchange()
     {
         var channel = Substitute.For<IChannel>();
-        var publisher = new EventPublisher(channel, "f1.events");
+        var publisher = new EventPublisher(channel);
+
+        await publisher.DeclareExchangeAsync();
+
+        await channel.Received(1).ExchangeDeclareAsync(
+            exchange: "f1.events",
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            arguments: null,
+            passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PublishToExchangeAsync_PublishesWithSourceAndTypeRoutingKey()
+    {
+        var channel = Substitute.For<IChannel>();
+        var publisher = new EventPublisher(channel);
         var events = new[]
         {
             new RaceEvent(
@@ -23,11 +42,11 @@ public class EventPublisherTests
                 EventSerializer.WritePayload(new LapCompletedPayload(1, 100, 30, 40, 30, false)))
         };
 
-        await publisher.PublishBatchAsync(events);
+        await publisher.PublishToExchangeAsync(events, RoutingKeys.History);
 
         await channel.Received(1).BasicPublishAsync(
-            exchange: string.Empty,
-            routingKey: "f1.events",
+            exchange: "f1.events",
+            routingKey: "history.lap_completed",
             mandatory: true,
             basicProperties: Arg.Is<BasicProperties>(p => p.Persistent),
             body: Arg.Any<ReadOnlyMemory<byte>>(),
