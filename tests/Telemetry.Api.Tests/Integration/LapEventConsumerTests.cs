@@ -54,4 +54,23 @@ public class LapEventConsumerTests : IDisposable
         var repository = new LapRepository(_db.Create());
         Assert.Empty(await repository.GetSessionsAsync());
     }
+
+    [Fact]
+    public async Task StartAsync_DeclaresDurableTopicExchange()
+    {
+        var channel = Substitute.For<IChannel>();
+        var consumer = new LapEventConsumer(channel, _provider.GetRequiredService<IServiceScopeFactory>());
+
+        await consumer.StartAsync(CancellationToken.None);
+
+        await channel.Received(1).ExchangeDeclareAsync(
+            exchange: "f1.events",
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            arguments: null,
+            passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
