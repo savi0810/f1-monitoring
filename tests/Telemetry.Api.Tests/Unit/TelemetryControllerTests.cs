@@ -13,7 +13,7 @@ public class TelemetryControllerTests
     [Fact]
     public async Task GetRaces_ReturnsRacesFromRepository()
     {
-        IReadOnlyList<RaceSummary> races = [new RaceSummary(11396, 2, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow)];
+        IReadOnlyList<SessionSummary> races = [new SessionSummary(11396, 2, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow)];
         _repository.GetRacesAsync().Returns(races);
 
         var result = await new TelemetryController(_repository).GetRaces();
