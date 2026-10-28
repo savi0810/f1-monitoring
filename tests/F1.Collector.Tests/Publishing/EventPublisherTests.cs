@@ -52,4 +52,31 @@ public class EventPublisherTests
             noWait: false,
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task PublishToExchangeAsync_PublishesWithSourceAndTypeRoutingKey()
+    {
+        var channel = Substitute.For<IChannel>();
+        var publisher = new EventPublisher(channel, "f1.events");
+        var events = new[]
+        {
+            new RaceEvent(
+                Guid.NewGuid(),
+                EventTypes.LapCompleted,
+                11396,
+                1,
+                DateTimeOffset.UtcNow,
+                EventSerializer.WritePayload(new LapCompletedPayload(1, 100, 30, 40, 30, false)))
+        };
+
+        await publisher.PublishToExchangeAsync(events, RoutingKeys.History);
+
+        await channel.Received(1).BasicPublishAsync(
+            exchange: "f1.events",
+            routingKey: "history.lap_completed",
+            mandatory: true,
+            basicProperties: Arg.Is<BasicProperties>(p => p.Persistent),
+            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
