@@ -23,6 +23,14 @@ public class EventPublisher
             autoDelete: false,
             cancellationToken: cancellationToken);
 
+    public Task DeclareExchangeAsync(CancellationToken cancellationToken = default) =>
+        _channel.ExchangeDeclareAsync(
+            exchange: ExchangeNames.F1Events,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
     public async Task PublishBatchAsync(IEnumerable<RaceEvent> events, CancellationToken cancellationToken = default)
     {
         var properties = new BasicProperties { Persistent = true };
