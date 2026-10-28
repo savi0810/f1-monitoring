@@ -1,0 +1,46 @@
+using Microsoft.AspNetCore.Mvc;
+using NSubstitute;
+using Telemetry.Api.Controllers;
+using Telemetry.Api.Data.Models;
+using Telemetry.Api.Data.Repositories;
+
+namespace Telemetry.Api.Tests.Unit;
+
+public class TelemetryControllerTests
+{
+    private readonly ILapRepository _repository = Substitute.For<ILapRepository>();
+
+    [Fact]
+    public async Task GetRaces_ReturnsRacesFromRepository()
+    {
+        IReadOnlyList<RaceSummary> races = [new RaceSummary(11396, 2, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow)];
+        _repository.GetRacesAsync().Returns(races);
+
+        var result = await new TelemetryController(_repository).GetRaces();
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Same(races, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetRace_KnownSession_ReturnsLaps()
+    {
+        IReadOnlyList<Lap> laps = [new Lap { EventId = Guid.NewGuid(), SessionKey = 11396, LapNumber = 1 }];
+        _repository.GetLapsBySessionKeyAsync(11396).Returns(laps);
+
+        var result = await new TelemetryController(_repository).GetRace(11396);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Same(laps, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetRace_UnknownSession_ReturnsNotFound()
+    {
+        _repository.GetLapsBySessionKeyAsync(1).Returns(Array.Empty<Lap>());
+
+        var result = await new TelemetryController(_repository).GetRace(1);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+}
