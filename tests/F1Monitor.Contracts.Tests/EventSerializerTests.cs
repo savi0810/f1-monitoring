@@ -27,6 +27,31 @@ public class EventSerializerTests
     }
 
     [Fact]
+    public void SerializeThenDeserialize_RestoresSessionFields()
+    {
+        var original = NewEvent() with { SessionType = "Race", SessionName = "Sprint" };
+
+        var restored = EventSerializer.Deserialize(EventSerializer.Serialize(original));
+
+        Assert.Equal("Race", restored.SessionType);
+        Assert.Equal("Sprint", restored.SessionName);
+    }
+
+    [Fact]
+    public void Deserialize_EventWithoutSessionFields_ReturnsNulls()
+    {
+        const string json = """
+            {"eventId":"11111111-1111-1111-1111-111111111111","type":"lap_completed","sessionKey":11388,
+             "driverNumber":3,"occurredAt":"2026-10-11T12:03:39+00:00","payload":{}}
+            """;
+
+        var restored = EventSerializer.Deserialize(json);
+
+        Assert.Null(restored.SessionType);
+        Assert.Null(restored.SessionName);
+    }
+
+    [Fact]
     public void ReadPayload_ReturnsLapData()
     {
         var raceEvent = EventSerializer.Deserialize(EventSerializer.Serialize(NewEvent()));
@@ -83,6 +108,20 @@ public class EventSerializerTests
         var restored = EventSerializer.Deserialize<ImportRequested>(EventSerializer.Serialize(original));
 
         Assert.Equal(original.SessionKey, restored.SessionKey);
+    }
+
+    [Fact]
+    public void GenericSerializeThenDeserialize_RestoresSessionAvailable()
+    {
+        var original = new SessionAvailable(
+            11396, 1297, 2026, "Race", "Race", "Austin", "United States",
+            new DateTimeOffset(2026, 10, 25, 20, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 10, 25, 22, 0, 0, TimeSpan.Zero),
+            false);
+
+        var restored = EventSerializer.Deserialize<SessionAvailable>(EventSerializer.Serialize(original));
+
+        Assert.Equal(original, restored);
     }
 
     [Fact]
