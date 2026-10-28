@@ -33,4 +33,23 @@ public class EventPublisherTests
             body: Arg.Any<ReadOnlyMemory<byte>>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task DeclareExchangeAsync_DeclaresDurableTopicExchange()
+    {
+        var channel = Substitute.For<IChannel>();
+        var publisher = new EventPublisher(channel, "f1.events");
+
+        await publisher.DeclareExchangeAsync();
+
+        await channel.Received(1).ExchangeDeclareAsync(
+            exchange: "f1.events",
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            arguments: null,
+            passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
