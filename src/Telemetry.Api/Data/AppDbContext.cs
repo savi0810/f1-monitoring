@@ -10,14 +10,14 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<RaceEventRecord> RaceEvents { get; set; }
+    public DbSet<Lap> Laps { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<RaceEventRecord>()
-            .HasKey(e => e.EventId);
+        modelBuilder.Entity<Lap>()
+            .HasKey(l => l.EventId);
 
-        modelBuilder.Entity<RaceEventRecord>()
-            .HasIndex(e => e.SessionKey);
+        modelBuilder.Entity<Lap>()
+            .HasIndex(l => l.SessionKey);
     }
 }
