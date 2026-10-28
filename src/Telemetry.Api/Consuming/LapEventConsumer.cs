@@ -42,10 +42,16 @@ public class LapEventConsumer : BackgroundService
             cancellationToken: stoppingToken);
 
         await _channel.QueueDeclareAsync(
-            queue: QueueNames.F1Events,
+            queue: QueueNames.TelemetryEvents,
             durable: true,
             exclusive: false,
             autoDelete: false,
+            cancellationToken: stoppingToken);
+
+        await _channel.QueueBindAsync(
+            queue: QueueNames.TelemetryEvents,
+            exchange: ExchangeNames.F1Events,
+            routingKey: RoutingKeys.AllEvents,
             cancellationToken: stoppingToken);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -59,6 +65,6 @@ public class LapEventConsumer : BackgroundService
             await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
         };
 
-        await _channel.BasicConsumeAsync(QueueNames.F1Events, autoAck: false, consumer, stoppingToken);
+        await _channel.BasicConsumeAsync(QueueNames.TelemetryEvents, autoAck: false, consumer, stoppingToken);
     }
 }
