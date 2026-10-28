@@ -24,7 +24,7 @@ public class ImportRequestedConsumerTests
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
-        var eventPublisher = new EventPublisher(channel, QueueNames.F1Events);
+        var eventPublisher = new EventPublisher(channel);
         var consumer = new ImportRequestedConsumer(channel, openF1Client, eventPublisher);
 
         await consumer.HandleImportRequestedAsync(new ImportRequested(11396));
