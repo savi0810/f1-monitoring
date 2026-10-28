@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 
 namespace Telemetry.Api.Controllers;
@@ -12,5 +13,11 @@ public class TelemetryController : ControllerBase
     public TelemetryController(ILapRepository lapRepository)
     {
         _lapRepository = lapRepository;
+    }
+
+    [HttpGet("races")]
+    public async Task<ActionResult<IReadOnlyList<RaceSummary>>> GetRaces()
+    {
+        return Ok(await _lapRepository.GetRacesAsync());
     }
 }
