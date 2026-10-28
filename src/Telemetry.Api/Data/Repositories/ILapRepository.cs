@@ -6,4 +6,5 @@ public interface ILapRepository
 {
     Task<bool> AddLapAsync(Lap lap);
     Task<IReadOnlyList<RaceSummary>> GetRacesAsync();
+    Task<IReadOnlyList<Lap>> GetLapsBySessionKeyAsync(int sessionKey);
 }

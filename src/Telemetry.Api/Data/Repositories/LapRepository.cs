@@ -40,4 +40,13 @@ public class LapRepository : ILapRepository
             .OrderByDescending(r => r.EndedAt)
             .ToListAsync();
     }
+
+    public async Task<IReadOnlyList<Lap>> GetLapsBySessionKeyAsync(int sessionKey)
+    {
+        return await _context.Laps
+            .Where(l => l.SessionKey == sessionKey)
+            .OrderBy(l => l.DriverNumber)
+            .ThenBy(l => l.LapNumber)
+            .ToListAsync();
+    }
 }
