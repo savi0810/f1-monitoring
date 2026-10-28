@@ -44,8 +44,8 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 |--------|--------|-----------|
 | Auth.Api | `POST /api/auth/register` | Регистрация |
 | Auth.Api | `POST /api/auth/login` | Вход по email и паролю, выдача JWT |
-| Telemetry.Api | `GET /api/telemetry/races` | Список гонок |
-| Telemetry.Api | `GET /api/telemetry/races/{id}` | Данные выбранной гонки |
+| Telemetry.Api | `GET /api/telemetry/sessions` | Список сессий (практики, квалификации, гонки) с числом кругов |
+| Telemetry.Api | `GET /api/telemetry/sessions/{sessionKey}/laps` | Круги выбранной сессии, 404 если данных нет |
 | Telemetry.Api | `GET /api/telemetry/compare` | Сравнение двух пилотов |
 | Alerts.Api | `GET, POST, DELETE /api/alerts/rules` | Правила уведомлений |
 | Alerts.Api | `GET, POST, DELETE /api/alerts/favorites` | Избранные пилоты |

@@ -15,14 +15,14 @@ public class TelemetryController : ControllerBase
         _lapRepository = lapRepository;
     }
 
-    [HttpGet("races")]
-    public async Task<ActionResult<IReadOnlyList<RaceSummary>>> GetRaces()
+    [HttpGet("sessions")]
+    public async Task<ActionResult<IReadOnlyList<SessionSummary>>> GetSessions()
     {
-        return Ok(await _lapRepository.GetRacesAsync());
+        return Ok(await _lapRepository.GetSessionsAsync());
     }
 
-    [HttpGet("races/{sessionKey:int}")]
-    public async Task<ActionResult<IReadOnlyList<Lap>>> GetRace(int sessionKey)
+    [HttpGet("sessions/{sessionKey:int}/laps")]
+    public async Task<ActionResult<IReadOnlyList<Lap>>> GetSessionLaps(int sessionKey)
     {
         var laps = await _lapRepository.GetLapsBySessionKeyAsync(sessionKey);
         return laps.Count == 0 ? NotFound() : Ok(laps);
