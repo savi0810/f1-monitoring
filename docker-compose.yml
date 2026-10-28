@@ -51,8 +51,15 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres-telemetry;Port=5432;Database=telemetrydb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      RabbitMq__Host: rabbitmq
     ports:
       - "5168:8080"
+    depends_on:
+      postgres-telemetry:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   alerts-api:
     build:
