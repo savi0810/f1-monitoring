@@ -7,7 +7,7 @@ public record RaceEvent(
     string Type,
     int SessionKey,
     int? DriverNumber,
-    DateTimeOffset OccurredAt,
+    DateTimeOffset? OccurredAt,
     JsonElement Payload,
     string? SessionType = null,
     string? SessionName = null);

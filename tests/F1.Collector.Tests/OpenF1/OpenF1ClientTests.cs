@@ -43,6 +43,17 @@ public class OpenF1ClientTests
     }
 
     [Fact]
+    public async Task GetLapsAsync_Returns404_ReturnsEmptyList()
+    {
+        const string body = """{"detail":"No results found."}""";
+        var client = CreateClient(HttpStatusCode.NotFound, body);
+
+        var laps = await client.GetLapsAsync(9079);
+
+        Assert.Empty(laps);
+    }
+
+    [Fact]
     public async Task GetSessionAsync_ReturnsSession()
     {
         const string json = """
@@ -70,5 +81,34 @@ public class OpenF1ClientTests
         var session = await client.GetSessionAsync(1);
 
         Assert.Null(session);
+    }
+
+    [Fact]
+    public async Task GetSessionsAsync_ReturnsSessionsOfYear()
+    {
+        const string json = """
+        [
+          {"session_key":11730,"session_type":"Qualifying","session_name":"Qualifying","date_start":"2026-10-03T08:00:00+00:00","date_end":"2026-10-03T09:00:00+00:00","meeting_key":1308,"circuit_short_name":"Kuala Lumpur","country_name":"Bahrain","year":2026,"is_cancelled":false},
+          {"session_key":11731,"session_type":"Race","session_name":"Race","date_start":"2026-10-04T07:00:00+00:00","date_end":"2026-10-04T09:00:00+00:00","meeting_key":1308,"circuit_short_name":"Kuala Lumpur","country_name":"Bahrain","year":2026,"is_cancelled":false}
+        ]
+        """;
+        var client = CreateClient(HttpStatusCode.OK, json);
+
+        var sessions = await client.GetSessionsAsync(2026);
+
+        Assert.Equal(2, sessions.Count);
+        Assert.Equal(11731, sessions[1].SessionKey);
+        Assert.Equal("Race", sessions[1].SessionType);
+    }
+
+    [Fact]
+    public async Task GetSessionsAsync_Returns404_ReturnsEmptyList()
+    {
+        const string body = """{"detail":"No results found."}""";
+        var client = CreateClient(HttpStatusCode.NotFound, body);
+
+        var sessions = await client.GetSessionsAsync(1999);
+
+        Assert.Empty(sessions);
     }
 }

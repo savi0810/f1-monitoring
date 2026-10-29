@@ -50,4 +50,14 @@ public class LapEventMapperTests
         Assert.Equal("Race", raceEvent.SessionName);
         Assert.Equal(LapEventMapper.Map(lap).EventId, raceEvent.EventId);
     }
+
+    [Fact]
+    public void Map_LapWithoutStartTime_HasNoOccurredAt()
+    {
+        var lap = new OpenF1Lap(11727, 43, 1, null, null, null, null, null, true);
+
+        var raceEvent = LapEventMapper.Map(lap);
+
+        Assert.Null(raceEvent.OccurredAt);
+    }
 }

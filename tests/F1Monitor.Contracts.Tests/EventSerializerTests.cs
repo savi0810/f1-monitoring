@@ -38,6 +38,16 @@ public class EventSerializerTests
     }
 
     [Fact]
+    public void SerializeThenDeserialize_EventWithoutTime_StaysWithoutTime()
+    {
+        var original = NewEvent() with { OccurredAt = null };
+
+        var restored = EventSerializer.Deserialize(EventSerializer.Serialize(original));
+
+        Assert.Null(restored.OccurredAt);
+    }
+
+    [Fact]
     public void Deserialize_EventWithoutSessionFields_ReturnsNulls()
     {
         const string json = """

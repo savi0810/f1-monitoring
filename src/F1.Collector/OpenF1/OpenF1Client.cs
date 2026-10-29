@@ -29,6 +29,10 @@ public class OpenF1Client
         {
             throw new OpenF1LiveSessionException("OpenF1 free access is restricted while a live session is in progress.");
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
     }
 
     public async Task<OpenF1Session?> GetSessionAsync(int sessionKey, CancellationToken cancellationToken = default)
@@ -45,6 +49,23 @@ public class OpenF1Client
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
             return null;
+        }
+    }
+
+    public async Task<IReadOnlyList<OpenF1Session>> GetSessionsAsync(int year, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var sessions = await _httpClient.GetFromJsonAsync<List<OpenF1Session>>(
+                $"sessions?year={year}", cancellationToken);
+
+            return sessions ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
         }
     }
 }

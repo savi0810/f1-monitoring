@@ -17,8 +17,9 @@ builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHttpClient<OpenF1Client>(client =>
 {
     client.BaseAddress = new Uri("https://api.openf1.org/v1/");
-});
+}).AddStandardResilienceHandler();
 builder.Services.AddHostedService<ImportRequestedConsumer>();
+builder.Services.AddHostedService<SessionCatalogPublisher>();
 
 var app = builder.Build();
 

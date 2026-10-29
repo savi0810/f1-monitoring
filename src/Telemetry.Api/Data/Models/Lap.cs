@@ -11,5 +11,5 @@ public class Lap
     public double? Sector2Duration { get; set; }
     public double? Sector3Duration { get; set; }
     public bool IsPitOutLap { get; set; }
-    public DateTimeOffset OccurredAt { get; set; }
+    public DateTimeOffset? OccurredAt { get; set; }
 }

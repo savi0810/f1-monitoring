@@ -40,7 +40,7 @@ namespace Telemetry.Api.Data.Migrations
                     b.Property<int>("LapNumber")
                         .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("OccurredAt")
+                    b.Property<DateTimeOffset?>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<double?>("Sector1Duration")
