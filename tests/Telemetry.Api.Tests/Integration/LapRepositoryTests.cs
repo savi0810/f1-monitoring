@@ -46,6 +46,19 @@ public class LapRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task AddLapAsync_LapWithoutStartTime_IsStored()
+    {
+        var lap = NewLap(Guid.NewGuid());
+        lap.OccurredAt = null;
+
+        var added = await new LapRepository(_db.Create()).AddLapAsync(lap);
+
+        Assert.True(added);
+        var stored = Assert.Single(await new LapRepository(_db.Create()).GetLapsBySessionKeyAsync(11396));
+        Assert.Null(stored.OccurredAt);
+    }
+
+    [Fact]
     public async Task AddLapAsync_DatabaseError_Rethrows()
     {
         await using var context = _db.Create();
