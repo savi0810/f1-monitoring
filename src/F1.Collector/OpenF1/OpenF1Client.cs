@@ -47,4 +47,21 @@ public class OpenF1Client
             return null;
         }
     }
+
+    public async Task<IReadOnlyList<OpenF1Session>> GetSessionsAsync(int year, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var sessions = await _httpClient.GetFromJsonAsync<List<OpenF1Session>>(
+                $"sessions?year={year}", cancellationToken);
+
+            return sessions ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
+    }
 }
