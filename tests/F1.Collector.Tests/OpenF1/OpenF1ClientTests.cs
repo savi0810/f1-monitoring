@@ -43,6 +43,17 @@ public class OpenF1ClientTests
     }
 
     [Fact]
+    public async Task GetLapsAsync_Returns404_ReturnsEmptyList()
+    {
+        const string body = """{"detail":"No results found."}""";
+        var client = CreateClient(HttpStatusCode.NotFound, body);
+
+        var laps = await client.GetLapsAsync(9079);
+
+        Assert.Empty(laps);
+    }
+
+    [Fact]
     public async Task GetSessionAsync_ReturnsSession()
     {
         const string json = """
