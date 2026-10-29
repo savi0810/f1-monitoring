@@ -102,4 +102,18 @@ public class SessionRepositoryTests : IDisposable
         var session = Assert.Single(sessions);
         Assert.Equal(11730, session.SessionKey);
     }
+
+    [Fact]
+    public async Task GetSessionsAsync_FiltersByYear()
+    {
+        var older = NewSession(9000);
+        older.Year = 2025;
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(older);
+
+        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync(null, 2025);
+
+        var session = Assert.Single(sessions);
+        Assert.Equal(9000, session.SessionKey);
+    }
 }
