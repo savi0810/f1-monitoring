@@ -116,4 +116,18 @@ public class SessionRepositoryTests : IDisposable
         var session = Assert.Single(sessions);
         Assert.Equal(9000, session.SessionKey);
     }
+
+    [Fact]
+    public async Task GetSessionsAsync_ReturnsNewestFirst()
+    {
+        var older = NewSession(9000);
+        older.DateStart = new DateTimeOffset(2026, 3, 1, 7, 0, 0, TimeSpan.Zero);
+        older.DateEnd = new DateTimeOffset(2026, 3, 1, 9, 0, 0, TimeSpan.Zero);
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(older);
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
+
+        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync(null, null);
+
+        Assert.Equal([11731, 9000], sessions.Select(s => s.SessionKey));
+    }
 }
