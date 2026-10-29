@@ -1,5 +1,7 @@
+using System.Text;
 using F1Monitor.Contracts;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 
@@ -51,5 +53,27 @@ public class SessionCatalogConsumer : BackgroundService
             exclusive: false,
             autoDelete: false,
             cancellationToken: stoppingToken);
+
+        var consumer = new AsyncEventingBasicConsumer(_channel);
+        consumer.ReceivedAsync += async (_, args) =>
+        {
+            try
+            {
+                var json = Encoding.UTF8.GetString(args.Body.Span);
+                var available = EventSerializer.Deserialize<SessionAvailable>(json);
+
+                await HandleSessionAvailableAsync(available);
+
+                await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Session catalog message failed.");
+
+                await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
+            }
+        };
+
+        await _channel.BasicConsumeAsync(QueueNames.SessionsAvailable, autoAck: false, consumer, stoppingToken);
     }
 }
