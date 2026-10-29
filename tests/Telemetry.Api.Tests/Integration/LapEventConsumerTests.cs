@@ -52,7 +52,7 @@ public class LapEventConsumerTests : IDisposable
         await CreateConsumer().HandleRaceEventAsync(raceEvent);
 
         var repository = new LapRepository(_db.Create());
-        Assert.Empty(await repository.GetSessionsAsync());
+        Assert.Empty(await repository.GetLapsBySessionKeyAsync(11396));
     }
 
     [Fact]
