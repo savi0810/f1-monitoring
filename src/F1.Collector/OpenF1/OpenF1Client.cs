@@ -29,6 +29,10 @@ public class OpenF1Client
         {
             throw new OpenF1LiveSessionException("OpenF1 free access is restricted while a live session is in progress.");
         }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
     }
 
     public async Task<OpenF1Session?> GetSessionAsync(int sessionKey, CancellationToken cancellationToken = default)
