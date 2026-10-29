@@ -18,7 +18,7 @@ public class LapRepository : ILapRepository
             INSERT INTO "Laps" ("EventId", "SessionKey", "DriverNumber", "LapNumber", "LapDuration",
                                 "Sector1Duration", "Sector2Duration", "Sector3Duration", "IsPitOutLap", "OccurredAt")
             VALUES ({lap.EventId}, {lap.SessionKey}, {lap.DriverNumber}, {lap.LapNumber}, {lap.LapDuration},
-                    {lap.Sector1Duration}, {lap.Sector2Duration}, {lap.Sector3Duration}, {lap.IsPitOutLap}, {lap.OccurredAt.ToUniversalTime()})
+                    {lap.Sector1Duration}, {lap.Sector2Duration}, {lap.Sector3Duration}, {lap.IsPitOutLap}, {lap.OccurredAt?.ToUniversalTime()})
             ON CONFLICT ("EventId") DO NOTHING
             """);
 
