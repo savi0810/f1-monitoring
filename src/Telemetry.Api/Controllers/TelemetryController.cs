@@ -9,10 +9,12 @@ namespace Telemetry.Api.Controllers;
 public class TelemetryController : ControllerBase
 {
     private readonly ILapRepository _lapRepository;
+    private readonly ISessionRepository _sessionRepository;
 
-    public TelemetryController(ILapRepository lapRepository)
+    public TelemetryController(ILapRepository lapRepository, ISessionRepository sessionRepository)
     {
         _lapRepository = lapRepository;
+        _sessionRepository = sessionRepository;
     }
 
     [HttpGet("sessions")]
