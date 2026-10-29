@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Telemetry.Api.Data.DTOs;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 
@@ -18,9 +19,9 @@ public class TelemetryController : ControllerBase
     }
 
     [HttpGet("sessions")]
-    public async Task<ActionResult<IReadOnlyList<SessionSummary>>> GetSessions()
+    public async Task<ActionResult<IReadOnlyList<SessionDto>>> GetSessions([FromQuery] string? type, [FromQuery] int? year)
     {
-        return Ok(await _lapRepository.GetSessionsAsync());
+        return Ok(await _sessionRepository.GetSessionsAsync(type, year));
     }
 
     [HttpGet("sessions/{sessionKey:int}/laps")]

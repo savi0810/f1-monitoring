@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using Telemetry.Api.Controllers;
+using Telemetry.Api.Data.DTOs;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 
@@ -12,12 +13,15 @@ public class TelemetryControllerTests
     private readonly ISessionRepository _sessionRepository = Substitute.For<ISessionRepository>();
 
     [Fact]
-    public async Task GetSessions_ReturnsSessionsFromRepository()
+    public async Task GetSessions_ReturnsSessionsFromSessionRepository()
     {
-        IReadOnlyList<SessionSummary> sessions = [new SessionSummary(11396, 2, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow)];
-        _repository.GetSessionsAsync().Returns(sessions);
+        IReadOnlyList<SessionDto> sessions =
+        [
+            new SessionDto(11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, false, 1145)
+        ];
+        _sessionRepository.GetSessionsAsync("Race", 2026).Returns(sessions);
 
-        var result = await new TelemetryController(_repository, _sessionRepository).GetSessions();
+        var result = await new TelemetryController(_repository, _sessionRepository).GetSessions("Race", 2026);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(sessions, ok.Value);
