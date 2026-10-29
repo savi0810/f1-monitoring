@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Telemetry.Api.Data.DTOs;
 using Telemetry.Api.Data.Models;
 
 namespace Telemetry.Api.Data.Repositories;
@@ -30,5 +31,33 @@ public class SessionRepository : ISessionRepository
                 "DateEnd" = EXCLUDED."DateEnd",
                 "IsCancelled" = EXCLUDED."IsCancelled"
             """);
+    }
+
+    public async Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year)
+    {
+        var query = _context.Sessions.AsNoTracking();
+
+        if (type is not null)
+            query = query.Where(s => s.SessionType == type);
+
+        if (year is not null)
+            query = query.Where(s => s.Year == year);
+
+        var sessions = await query
+            .Select(s => new SessionDto(
+                s.SessionKey,
+                s.MeetingKey,
+                s.Year,
+                s.SessionType,
+                s.SessionName,
+                s.CircuitShortName,
+                s.CountryName,
+                s.DateStart,
+                s.DateEnd,
+                s.IsCancelled,
+                _context.Laps.Count(l => l.SessionKey == s.SessionKey)))
+            .ToListAsync();
+
+        return sessions.OrderByDescending(s => s.DateStart).ToList();
     }
 }
