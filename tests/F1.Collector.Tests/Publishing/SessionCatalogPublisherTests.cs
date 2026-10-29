@@ -32,4 +32,33 @@ public class SessionCatalogPublisherTests
             body: Arg.Any<ReadOnlyMemory<byte>>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task PublishCatalogAsync_DeclaresSessionsQueue()
+    {
+        var handler = new FakeHttpMessageHandler(HttpStatusCode.NotFound, """{"detail":"No results found."}""");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
+        var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
+        var channel = Substitute.For<IChannel>();
+        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel));
+
+        await publisher.PublishCatalogAsync();
+
+        await channel.Received(1).QueueDeclareAsync(
+            queue: "sessions.available",
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null,
+            passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+        await channel.DidNotReceive().BasicPublishAsync(
+            exchange: Arg.Any<string>(),
+            routingKey: Arg.Any<string>(),
+            mandatory: Arg.Any<bool>(),
+            basicProperties: Arg.Any<BasicProperties>(),
+            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
