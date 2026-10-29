@@ -87,4 +87,19 @@ public class SessionCatalogPublisherTests
             body: Arg.Any<ReadOnlyMemory<byte>>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task ExecuteAsync_OpenF1Fails_DoesNotThrow()
+    {
+        var handler = new FakeHttpMessageHandler(HttpStatusCode.InternalServerError, "boom");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
+        var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
+        var channel = Substitute.For<IChannel>();
+        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel), NullLogger<SessionCatalogPublisher>.Instance);
+
+        await publisher.StartAsync(CancellationToken.None);
+
+        var exception = await Record.ExceptionAsync(() => publisher.ExecuteTask!);
+        Assert.Null(exception);
+    }
 }
