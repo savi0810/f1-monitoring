@@ -88,4 +88,18 @@ public class SessionRepositoryTests : IDisposable
         Assert.Equal(2, sessions.Single(s => s.SessionKey == 11731).LapCount);
         Assert.Equal(0, sessions.Single(s => s.SessionKey == 11730).LapCount);
     }
+
+    [Fact]
+    public async Task GetSessionsAsync_FiltersByType()
+    {
+        var qualifying = NewSession(11730);
+        qualifying.SessionType = "Qualifying";
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(qualifying);
+
+        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync("Qualifying", null);
+
+        var session = Assert.Single(sessions);
+        Assert.Equal(11730, session.SessionKey);
+    }
 }
