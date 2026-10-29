@@ -43,5 +43,13 @@ public class SessionCatalogConsumer : BackgroundService
         await repository.UpsertSessionAsync(session);
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.CompletedTask;
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await _channel.QueueDeclareAsync(
+            queue: QueueNames.SessionsAvailable,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+    }
 }
