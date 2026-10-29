@@ -63,4 +63,29 @@ public class SessionRepositoryTests : IDisposable
         Assert.Null(stored.CircuitShortName);
         Assert.Null(stored.CountryName);
     }
+
+    private static Lap NewLap(int sessionKey, int lapNumber) => new()
+    {
+        EventId = Guid.NewGuid(),
+        SessionKey = sessionKey,
+        DriverNumber = 1,
+        LapNumber = lapNumber,
+        OccurredAt = DateTimeOffset.UtcNow
+    };
+
+    [Fact]
+    public async Task GetSessionsAsync_ReturnsSessionsWithLapCount()
+    {
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11730));
+        var laps = new LapRepository(_db.Create());
+        await laps.AddLapAsync(NewLap(11731, 1));
+        await laps.AddLapAsync(NewLap(11731, 2));
+
+        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync(null, null);
+
+        Assert.Equal(2, sessions.Count);
+        Assert.Equal(2, sessions.Single(s => s.SessionKey == 11731).LapCount);
+        Assert.Equal(0, sessions.Single(s => s.SessionKey == 11730).LapCount);
+    }
 }
