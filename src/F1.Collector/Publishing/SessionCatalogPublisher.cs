@@ -25,7 +25,7 @@ public class SessionCatalogPublisher : BackgroundService
             var sessions = await _openF1Client.GetSessionsAsync(year, cancellationToken);
 
             await _eventPublisher.PublishSessionsAsync(
-                sessions.Select(SessionAvailableMapper.Map),
+                sessions.Where(session => !session.IsCancelled).Select(SessionAvailableMapper.Map),
                 cancellationToken);
         }
     }
