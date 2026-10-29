@@ -13,12 +13,18 @@ public class ImportRequestedConsumer : BackgroundService
     private readonly IChannel _channel;
     private readonly OpenF1Client _openF1Client;
     private readonly EventPublisher _eventPublisher;
+    private readonly ILogger<ImportRequestedConsumer> _logger;
 
-    public ImportRequestedConsumer(IChannel channel, OpenF1Client openF1Client, EventPublisher eventPublisher)
+    public ImportRequestedConsumer(
+        IChannel channel,
+        OpenF1Client openF1Client,
+        EventPublisher eventPublisher,
+        ILogger<ImportRequestedConsumer> logger)
     {
         _channel = channel;
         _openF1Client = openF1Client;
         _eventPublisher = eventPublisher;
+        _logger = logger;
     }
 
     public async Task HandleImportRequestedAsync(ImportRequested request, CancellationToken cancellationToken = default)
@@ -31,6 +37,24 @@ public class ImportRequestedConsumer : BackgroundService
         var events = laps.Select(lap => LapEventMapper.Map(lap, session));
 
         await _eventPublisher.PublishToExchangeAsync(events, RoutingKeys.History, cancellationToken);
+    }
+
+    public async Task<bool> TryHandleAsync(string json, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var request = EventSerializer.Deserialize<ImportRequested>(json);
+
+            await HandleImportRequestedAsync(request, cancellationToken);
+
+            return true;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Import request failed: {Body}", json);
+
+            return false;
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,11 +70,11 @@ public class ImportRequestedConsumer : BackgroundService
         consumer.ReceivedAsync += async (_, args) =>
         {
             var json = Encoding.UTF8.GetString(args.Body.Span);
-            var request = EventSerializer.Deserialize<ImportRequested>(json);
 
-            await HandleImportRequestedAsync(request, stoppingToken);
-
-            await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
+            if (await TryHandleAsync(json, stoppingToken))
+                await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
+            else
+                await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
         };
 
         await _channel.BasicConsumeAsync(QueueNames.ImportRequested, autoAck: false, consumer, stoppingToken);

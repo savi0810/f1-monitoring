@@ -5,6 +5,7 @@ using F1.Collector.OpenF1;
 using F1.Collector.Publishing;
 using F1.Collector.Tests.Infrastructure;
 using F1Monitor.Contracts;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using RabbitMQ.Client;
 
@@ -30,7 +31,7 @@ public class ImportRequestedConsumerTests
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
         var eventPublisher = new EventPublisher(channel);
-        var consumer = new ImportRequestedConsumer(channel, openF1Client, eventPublisher);
+        var consumer = new ImportRequestedConsumer(channel, openF1Client, eventPublisher, NullLogger<ImportRequestedConsumer>.Instance);
 
         await consumer.HandleImportRequestedAsync(new ImportRequested(11396));
 
@@ -50,7 +51,7 @@ public class ImportRequestedConsumerTests
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
-        var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel));
+        var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel), NullLogger<ImportRequestedConsumer>.Instance);
 
         await consumer.HandleImportRequestedAsync(new ImportRequested(1));
 
@@ -77,7 +78,7 @@ public class ImportRequestedConsumerTests
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
-        var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel));
+        var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel), NullLogger<ImportRequestedConsumer>.Instance);
 
         await consumer.HandleImportRequestedAsync(new ImportRequested(11396));
 
