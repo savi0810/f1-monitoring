@@ -111,4 +111,25 @@ public class ImportRequestedConsumerTests
             body: Arg.Any<ReadOnlyMemory<byte>>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task TryHandleAsync_OpenF1Fails_ReturnsFalseAndPublishesNothing()
+    {
+        var handler = new FakeHttpMessageHandler(HttpStatusCode.InternalServerError, "boom");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
+        var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
+        var channel = Substitute.For<IChannel>();
+        var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel), NullLogger<ImportRequestedConsumer>.Instance);
+
+        var handled = await consumer.TryHandleAsync("""{"sessionKey":11396}""");
+
+        Assert.False(handled);
+        await channel.DidNotReceive().BasicPublishAsync(
+            exchange: Arg.Any<string>(),
+            routingKey: Arg.Any<string>(),
+            mandatory: Arg.Any<bool>(),
+            basicProperties: Arg.Any<BasicProperties>(),
+            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
