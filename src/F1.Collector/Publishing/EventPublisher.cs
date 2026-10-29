@@ -21,6 +21,14 @@ public class EventPublisher
             autoDelete: false,
             cancellationToken: cancellationToken);
 
+    public Task DeclareSessionsQueueAsync(CancellationToken cancellationToken = default) =>
+        _channel.QueueDeclareAsync(
+            queue: QueueNames.SessionsAvailable,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
     public async Task PublishToExchangeAsync(
         IEnumerable<RaceEvent> events,
         string source,
@@ -36,6 +44,32 @@ public class EventPublisher
             publishTasks.Add(_channel.BasicPublishAsync(
                 exchange: ExchangeNames.F1Events,
                 routingKey: RoutingKeys.For(source, raceEvent.Type),
+                mandatory: true,
+                basicProperties: properties,
+                body: body,
+                cancellationToken: cancellationToken));
+        }
+
+        foreach (var publishTask in publishTasks)
+        {
+            await publishTask;
+        }
+    }
+
+    public async Task PublishSessionsAsync(
+        IEnumerable<SessionAvailable> sessions,
+        CancellationToken cancellationToken = default)
+    {
+        var properties = new BasicProperties { Persistent = true };
+        var publishTasks = new List<ValueTask>();
+
+        foreach (var session in sessions)
+        {
+            var body = Encoding.UTF8.GetBytes(EventSerializer.Serialize(session));
+
+            publishTasks.Add(_channel.BasicPublishAsync(
+                exchange: string.Empty,
+                routingKey: QueueNames.SessionsAvailable,
                 mandatory: true,
                 basicProperties: properties,
                 body: body,
