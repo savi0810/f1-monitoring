@@ -18,6 +18,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddTelemetryServices(builder.Configuration);
 builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHostedService<LapEventConsumer>();
+builder.Services.AddHostedService<SessionCatalogConsumer>();
 
 var app = builder.Build();
 
