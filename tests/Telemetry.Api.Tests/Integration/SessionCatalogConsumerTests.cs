@@ -51,4 +51,27 @@ public class SessionCatalogConsumerTests : IDisposable
         Assert.Equal("Race", stored.SessionType);
         Assert.Equal("Kuala Lumpur", stored.CircuitShortName);
     }
+
+    [Fact]
+    public async Task StartAsync_DeclaresSessionsQueue()
+    {
+        var channel = Substitute.For<IChannel>();
+        var consumer = new SessionCatalogConsumer(
+            channel,
+            _provider.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<SessionCatalogConsumer>.Instance);
+
+        await consumer.StartAsync(CancellationToken.None);
+        await consumer.ExecuteTask!;
+
+        await channel.Received(1).QueueDeclareAsync(
+            queue: "sessions.available",
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null,
+            passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
