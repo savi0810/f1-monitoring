@@ -88,10 +88,11 @@ services:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/5672"]
       interval: 5s
-      timeout: 5s
+      timeout: 15s
       retries: 10
+      start_period: 30s
 
   f1-collector:
     build:
