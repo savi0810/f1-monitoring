@@ -52,4 +52,53 @@ public class EventPublisherTests
             body: Arg.Any<ReadOnlyMemory<byte>>(),
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task DeclareSessionsQueueAsync_DeclaresDurableQueue()
+    {
+        var channel = Substitute.For<IChannel>();
+        var publisher = new EventPublisher(channel);
+
+        await publisher.DeclareSessionsQueueAsync();
+
+        await channel.Received(1).QueueDeclareAsync(
+            queue: "sessions.available",
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null,
+            passive: false,
+            noWait: false,
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PublishSessionsAsync_PublishesEachSessionToQueue()
+    {
+        var channel = Substitute.For<IChannel>();
+        var publisher = new EventPublisher(channel);
+        var sessions = new[]
+        {
+            new SessionAvailable(
+                11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain",
+                DateTimeOffset.Parse("2026-10-04T07:00:00+00:00"),
+                DateTimeOffset.Parse("2026-10-04T09:00:00+00:00"),
+                false),
+            new SessionAvailable(
+                11730, 1308, 2026, "Qualifying", "Qualifying", "Kuala Lumpur", "Bahrain",
+                DateTimeOffset.Parse("2026-10-03T08:00:00+00:00"),
+                DateTimeOffset.Parse("2026-10-03T09:00:00+00:00"),
+                false)
+        };
+
+        await publisher.PublishSessionsAsync(sessions);
+
+        await channel.Received(2).BasicPublishAsync(
+            exchange: string.Empty,
+            routingKey: "sessions.available",
+            mandatory: true,
+            basicProperties: Arg.Is<BasicProperties>(p => p.Persistent),
+            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
