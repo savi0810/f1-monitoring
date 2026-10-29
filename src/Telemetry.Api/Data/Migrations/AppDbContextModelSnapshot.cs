@@ -61,6 +61,49 @@ namespace Telemetry.Api.Data.Migrations
 
                     b.ToTable("Laps");
                 });
+
+            modelBuilder.Entity("Telemetry.Api.Data.Models.Session", b =>
+                {
+                    b.Property<int>("SessionKey")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CircuitShortName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CountryName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("DateEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DateStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MeetingKey")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SessionName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SessionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("SessionKey");
+
+                    b.HasIndex("DateStart");
+
+                    b.HasIndex("Year", "SessionType");
+
+                    b.ToTable("Sessions");
+                });
 #pragma warning restore 612, 618
         }
     }
