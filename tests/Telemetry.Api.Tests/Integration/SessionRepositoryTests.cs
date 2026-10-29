@@ -49,4 +49,18 @@ public class SessionRepositoryTests : IDisposable
         Assert.Equal("Sprint", stored.SessionName);
         Assert.True(stored.IsCancelled);
     }
+
+    [Fact]
+    public async Task UpsertSessionAsync_SessionWithoutCircuitAndCountry_IsStored()
+    {
+        var session = NewSession();
+        session.CircuitShortName = null;
+        session.CountryName = null;
+
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(session);
+
+        var stored = Assert.Single(_db.Create().Sessions);
+        Assert.Null(stored.CircuitShortName);
+        Assert.Null(stored.CountryName);
+    }
 }
