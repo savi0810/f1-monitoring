@@ -9,11 +9,16 @@ public class SessionCatalogPublisher : BackgroundService
 
     private readonly OpenF1Client _openF1Client;
     private readonly EventPublisher _eventPublisher;
+    private readonly ILogger<SessionCatalogPublisher> _logger;
 
-    public SessionCatalogPublisher(OpenF1Client openF1Client, EventPublisher eventPublisher)
+    public SessionCatalogPublisher(
+        OpenF1Client openF1Client,
+        EventPublisher eventPublisher,
+        ILogger<SessionCatalogPublisher> logger)
     {
         _openF1Client = openF1Client;
         _eventPublisher = eventPublisher;
+        _logger = logger;
     }
 
     public async Task PublishCatalogAsync(CancellationToken cancellationToken = default)
@@ -30,6 +35,15 @@ public class SessionCatalogPublisher : BackgroundService
         }
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken) =>
-        PublishCatalogAsync(stoppingToken);
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            await PublishCatalogAsync(stoppingToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Sessions catalog was not published.");
+        }
+    }
 }

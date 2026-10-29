@@ -2,6 +2,7 @@ using System.Net;
 using F1.Collector.OpenF1;
 using F1.Collector.Publishing;
 using F1.Collector.Tests.Infrastructure;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using RabbitMQ.Client;
 
@@ -19,7 +20,7 @@ public class SessionCatalogPublisherTests
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
-        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel));
+        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel), NullLogger<SessionCatalogPublisher>.Instance);
 
         await publisher.PublishCatalogAsync();
 
@@ -45,7 +46,7 @@ public class SessionCatalogPublisherTests
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
-        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel));
+        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel), NullLogger<SessionCatalogPublisher>.Instance);
 
         await publisher.PublishCatalogAsync();
 
@@ -65,7 +66,7 @@ public class SessionCatalogPublisherTests
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
-        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel));
+        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel), NullLogger<SessionCatalogPublisher>.Instance);
 
         await publisher.PublishCatalogAsync();
 
