@@ -35,4 +35,18 @@ public class SessionRepositoryTests : IDisposable
         Assert.Equal("Race", stored.SessionType);
         Assert.Equal("Kuala Lumpur", stored.CircuitShortName);
     }
+
+    [Fact]
+    public async Task UpsertSessionAsync_ExistingSession_UpdatesItWithoutDuplicate()
+    {
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(sessionName: "Race"));
+
+        var changed = NewSession(sessionName: "Sprint");
+        changed.IsCancelled = true;
+        await new SessionRepository(_db.Create()).UpsertSessionAsync(changed);
+
+        var stored = Assert.Single(_db.Create().Sessions);
+        Assert.Equal("Sprint", stored.SessionName);
+        Assert.True(stored.IsCancelled);
+    }
 }
