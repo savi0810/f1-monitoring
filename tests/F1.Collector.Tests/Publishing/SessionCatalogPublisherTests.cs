@@ -34,6 +34,31 @@ public class SessionCatalogPublisherTests
     }
 
     [Fact]
+    public async Task PublishCatalogAsync_SkipsCancelledSessions()
+    {
+        const string sessionsJson = """
+        [
+          {"session_key":9079,"session_type":"Practice","session_name":"Practice 1","date_start":"2023-03-03T11:30:00+00:00","date_end":"2023-03-03T12:30:00+00:00","meeting_key":1141,"circuit_short_name":"Sakhir","country_name":"Bahrain","year":2023,"is_cancelled":true}
+        ]
+        """;
+        var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, sessionsJson);
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
+        var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
+        var channel = Substitute.For<IChannel>();
+        var publisher = new SessionCatalogPublisher(openF1Client, new EventPublisher(channel));
+
+        await publisher.PublishCatalogAsync();
+
+        await channel.DidNotReceive().BasicPublishAsync(
+            exchange: Arg.Any<string>(),
+            routingKey: Arg.Any<string>(),
+            mandatory: Arg.Any<bool>(),
+            basicProperties: Arg.Any<BasicProperties>(),
+            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task PublishCatalogAsync_DeclaresSessionsQueue()
     {
         var handler = new FakeHttpMessageHandler(HttpStatusCode.NotFound, """{"detail":"No results found."}""");
