@@ -74,4 +74,27 @@ public class SessionCatalogConsumerTests : IDisposable
             noWait: false,
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task StartAsync_ConsumesSessionsQueue()
+    {
+        var channel = Substitute.For<IChannel>();
+        var consumer = new SessionCatalogConsumer(
+            channel,
+            _provider.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<SessionCatalogConsumer>.Instance);
+
+        await consumer.StartAsync(CancellationToken.None);
+        await consumer.ExecuteTask!;
+
+        await channel.Received(1).BasicConsumeAsync(
+            queue: "sessions.available",
+            autoAck: false,
+            consumerTag: Arg.Any<string>(),
+            noLocal: false,
+            exclusive: false,
+            arguments: null,
+            consumer: Arg.Any<IAsyncBasicConsumer>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
