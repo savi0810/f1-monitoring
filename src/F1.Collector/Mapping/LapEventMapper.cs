@@ -23,7 +23,7 @@ public static class LapEventMapper
             EventTypes.LapCompleted,
             lap.SessionKey,
             lap.DriverNumber,
-            lap.DateStart ?? DateTimeOffset.UtcNow,
+            lap.DateStart,
             EventSerializer.WritePayload(payload));
     }
 
