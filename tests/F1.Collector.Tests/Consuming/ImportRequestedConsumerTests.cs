@@ -90,4 +90,25 @@ public class ImportRequestedConsumerTests
             body: Arg.Is<ReadOnlyMemory<byte>>(b => Encoding.UTF8.GetString(b.ToArray()).Contains("\"sessionType\":\"Race\"")),
             cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task TryHandleAsync_InvalidJson_ReturnsFalseAndPublishesNothing()
+    {
+        var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, "[]");
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
+        var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
+        var channel = Substitute.For<IChannel>();
+        var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel), NullLogger<ImportRequestedConsumer>.Instance);
+
+        var handled = await consumer.TryHandleAsync("not a json");
+
+        Assert.False(handled);
+        await channel.DidNotReceive().BasicPublishAsync(
+            exchange: Arg.Any<string>(),
+            routingKey: Arg.Any<string>(),
+            mandatory: Arg.Any<bool>(),
+            basicProperties: Arg.Any<BasicProperties>(),
+            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
 }
