@@ -19,7 +19,20 @@ public class SessionImportService : ISessionImportService
         _importRequestPublisher = importRequestPublisher;
     }
 
-    public async Task<SessionImportDto> StartImportAsync(Session session, CancellationToken cancellationToken = default)
+    public async Task<SessionImportDto?> StartImportAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        var session = await _sessionRepository.GetByKeyAsync(sessionKey, cancellationToken);
+
+        if (session is null)
+            return null;
+
+        if (session.IsCancelled)
+            throw new InvalidOperationException("Cancelled sessions cannot be imported.");
+
+        return await StartImportForSessionAsync(session, cancellationToken);
+    }
+
+    private async Task<SessionImportDto> StartImportForSessionAsync(Session session, CancellationToken cancellationToken)
     {
         if (session.ImportId is Guid existingId && session.ImportStatus is ImportStatus existingStatus
             && existingStatus is (ImportStatus.Pending or ImportStatus.Processing or ImportStatus.Completed or ImportStatus.Empty))
