@@ -113,11 +113,12 @@ public class EventSerializerTests
     [Fact]
     public void GenericSerializeThenDeserialize_RestoresMessage()
     {
-        var original = new ImportRequested(11396);
+        var original = new ImportRequested(11396, Guid.NewGuid());
 
-        var restored = EventSerializer.Deserialize<ImportRequested>(EventSerializer.Serialize(original));
+        var restored = EventSerializer.Deserialize<ImportRequested>(
+            EventSerializer.Serialize(original));
 
-        Assert.Equal(original.SessionKey, restored.SessionKey);
+        Assert.Equal(original, restored);
     }
 
     [Fact]
