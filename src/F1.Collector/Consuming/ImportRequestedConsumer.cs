@@ -29,6 +29,8 @@ public class ImportRequestedConsumer : BackgroundService
 
     public async Task HandleImportRequestedAsync(ImportRequested request, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.SessionKey);
+
         var session = await _openF1Client.GetSessionAsync(request.SessionKey, cancellationToken);
         if (session is null)
             return;
