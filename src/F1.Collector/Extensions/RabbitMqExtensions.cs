@@ -23,15 +23,29 @@ public static class RabbitMqExtensions
         services.AddSingleton(sp =>
         {
             var connection = sp.GetRequiredService<IConnection>();
-            var options = new CreateChannelOptions(
-                publisherConfirmationsEnabled: true,
-                publisherConfirmationTrackingEnabled: true);
 
-            return connection.CreateChannelAsync(options).GetAwaiter().GetResult();
+            return connection.CreateChannelAsync().GetAwaiter().GetResult();
         });
 
-        services.AddSingleton(sp => new EventPublisher(sp.GetRequiredService<IChannel>()));
+        services.AddKeyedSingleton<IChannel>("events", CreatePublisherChannel);
+        services.AddKeyedSingleton<IChannel>("catalog", CreatePublisherChannel);
+
+        services.AddSingleton(sp =>
+            new EventPublisher(sp.GetRequiredKeyedService<IChannel>("events")));
+
+        services.AddKeyedSingleton<EventPublisher>("catalog", (sp, _) =>
+            new EventPublisher(sp.GetRequiredKeyedService<IChannel>("catalog")));
 
         return services;
+    }
+
+    private static IChannel CreatePublisherChannel(IServiceProvider services, object? _)
+    {
+        var connection = services.GetRequiredService<IConnection>();
+        var options = new CreateChannelOptions(
+            publisherConfirmationsEnabled: true,
+            publisherConfirmationTrackingEnabled: true);
+
+        return connection.CreateChannelAsync(options).GetAwaiter().GetResult();
     }
 }

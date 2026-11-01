@@ -12,6 +12,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Lap> Laps { get; set; }
 
+    public DbSet<Session> Sessions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Lap>()
@@ -19,5 +21,18 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Lap>()
             .HasIndex(l => l.SessionKey);
+
+        modelBuilder.Entity<Session>()
+            .HasKey(s => s.SessionKey);
+
+        modelBuilder.Entity<Session>()
+            .Property(s => s.SessionKey)
+            .ValueGeneratedNever();
+
+        modelBuilder.Entity<Session>()
+            .HasIndex(s => new { s.Year, s.SessionType });
+
+        modelBuilder.Entity<Session>()
+            .HasIndex(s => s.DateStart);
     }
 }

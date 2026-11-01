@@ -25,23 +25,6 @@ public class LapRepository : ILapRepository
         return inserted > 0;
     }
 
-    public async Task<IReadOnlyList<SessionSummary>> GetSessionsAsync()
-    {
-        var sessionTimestamps = await _context.Laps
-            .Select(l => new { l.SessionKey, l.OccurredAt })
-            .ToListAsync();
-
-        return sessionTimestamps
-            .GroupBy(l => l.SessionKey)
-            .Select(g => new SessionSummary(
-                g.Key,
-                g.Count(),
-                g.Min(l => l.OccurredAt),
-                g.Max(l => l.OccurredAt)))
-            .OrderByDescending(r => r.EndedAt)
-            .ToList();
-    }
-
     public async Task<IReadOnlyList<Lap>> GetLapsBySessionKeyAsync(int sessionKey)
     {
         return await _context.Laps

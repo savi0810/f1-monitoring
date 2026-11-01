@@ -68,43 +68,6 @@ public class LapRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetSessionsAsync_GroupsLapsBySessionKey()
-    {
-        var repository = new LapRepository(_db.Create());
-        await repository.AddLapAsync(NewLap(Guid.NewGuid(), sessionKey: 11396, lapNumber: 1));
-        await repository.AddLapAsync(NewLap(Guid.NewGuid(), sessionKey: 11396, lapNumber: 2));
-        await repository.AddLapAsync(NewLap(Guid.NewGuid(), sessionKey: 9999, lapNumber: 1));
-
-        var races = await new LapRepository(_db.Create()).GetSessionsAsync();
-
-        var race = Assert.Single(races, r => r.SessionKey == 11396);
-        Assert.Equal(2, race.LapCount);
-    }
-
-    [Fact]
-    public async Task GetSessionsAsync_IgnoresLapsWithoutStartTime()
-    {
-        var repository = new LapRepository(_db.Create());
-        var startedAt = new DateTimeOffset(2026, 10, 4, 7, 0, 0, TimeSpan.Zero);
-        var lapWithoutTime = NewLap(Guid.NewGuid(), lapNumber: 1);
-        lapWithoutTime.OccurredAt = null;
-        var firstLap = NewLap(Guid.NewGuid(), lapNumber: 2);
-        firstLap.OccurredAt = startedAt;
-        var lastLap = NewLap(Guid.NewGuid(), lapNumber: 3);
-        lastLap.OccurredAt = startedAt.AddMinutes(90);
-        await repository.AddLapAsync(lapWithoutTime);
-        await repository.AddLapAsync(firstLap);
-        await repository.AddLapAsync(lastLap);
-
-        var sessions = await new LapRepository(_db.Create()).GetSessionsAsync();
-
-        var session = Assert.Single(sessions);
-        Assert.Equal(3, session.LapCount);
-        Assert.Equal(startedAt, session.StartedAt);
-        Assert.Equal(startedAt.AddMinutes(90), session.EndedAt);
-    }
-
-    [Fact]
     public async Task GetLapsBySessionKeyAsync_ReturnsOnlyMatchingLaps()
     {
         var repository = new LapRepository(_db.Create());

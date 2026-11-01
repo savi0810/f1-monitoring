@@ -12,6 +12,7 @@ public static class TelemetryExtensions
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<ILapRepository, LapRepository>();
+        services.AddScoped<ISessionRepository, SessionRepository>();
 
         return services;
     }
