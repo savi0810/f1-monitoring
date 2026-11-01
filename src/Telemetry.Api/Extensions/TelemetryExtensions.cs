@@ -15,6 +15,7 @@ public static class TelemetryExtensions
         services.AddScoped<ILapRepository, LapRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<ISessionImportService, SessionImportService>();
+        services.AddScoped<ITelemetryQueryService, TelemetryQueryService>();
 
         return services;
     }
