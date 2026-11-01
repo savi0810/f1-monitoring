@@ -45,7 +45,7 @@ public class ImportRequestedConsumerTests
     }
 
     [Fact]
-    public async Task HandleImportRequestedAsync_UnknownSession_PublishesNothing()
+    public async Task HandleImportRequestedAsync_UnknownSession_ThrowsAndPublishesNothing()
     {
         var handler = new FakeHttpMessageHandler(HttpStatusCode.NotFound, """{"detail":"No results found."}""");
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
@@ -53,7 +53,8 @@ public class ImportRequestedConsumerTests
         var channel = Substitute.For<IChannel>();
         var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel), NullLogger<ImportRequestedConsumer>.Instance);
 
-        await consumer.HandleImportRequestedAsync(new ImportRequested(1));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            consumer.HandleImportRequestedAsync(new ImportRequested(1)));
 
         await channel.DidNotReceive().BasicPublishAsync(
             exchange: Arg.Any<string>(),
