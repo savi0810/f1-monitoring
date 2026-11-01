@@ -40,34 +40,59 @@ public class ImportRequestedConsumer : BackgroundService
         var events = laps.Select(lap => LapEventMapper.Map(lap, session));
 
         await _eventPublisher.PublishToExchangeAsync(events, RoutingKeys.History, cancellationToken);
+        await PublishImportFinishedAsync(request, laps.Count, null, cancellationToken);
+    }
 
-        var finishedPayload = new SessionImportFinishedPayload(request.ImportId, laps.Count, null);
-        var finishedEvent = new RaceEvent(
+    private Task PublishImportFinishedAsync(
+        ImportRequested request,
+        int lapCount,
+        string? error,
+        CancellationToken cancellationToken)
+    {
+        var payload = new SessionImportFinishedPayload(request.ImportId, lapCount, error);
+        var raceEvent = new RaceEvent(
             EventIdFactory.Create($"{EventTypes.SessionImportFinished}:{request.ImportId}"),
             EventTypes.SessionImportFinished,
             request.SessionKey,
             null,
             null,
-            EventSerializer.WritePayload(finishedPayload));
+            EventSerializer.WritePayload(payload));
 
-        await _eventPublisher.PublishToExchangeAsync([finishedEvent], RoutingKeys.History, cancellationToken);
+        return _eventPublisher.PublishToExchangeAsync([raceEvent], RoutingKeys.History, cancellationToken);
     }
 
     public async Task<bool> TryHandleAsync(string json, CancellationToken cancellationToken = default)
     {
+        ImportRequested request;
         try
         {
-            var request = EventSerializer.Deserialize<ImportRequested>(json);
+            request = EventSerializer.Deserialize<ImportRequested>(json);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Import request failed: {Body}", json);
+            return false;
+        }
 
+        try
+        {
             await HandleImportRequestedAsync(request, cancellationToken);
-
             return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Import request failed: {Body}", json);
 
-            return false;
+            try
+            {
+                await PublishImportFinishedAsync(request, 0, ex.Message, cancellationToken);
+                return true;
+            }
+            catch (Exception publishException) when (publishException is not OperationCanceledException)
+            {
+                _logger.LogError(publishException, "Failed to publish import failure for session {SessionKey}", request.SessionKey);
+                return false;
+            }
         }
     }
 
