@@ -79,6 +79,18 @@ namespace Telemetry.Api.Data.Migrations
                     b.Property<DateTimeOffset>("DateStart")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("ImportCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImportError")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ImportStatus")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsCancelled")
                         .HasColumnType("boolean");
 
