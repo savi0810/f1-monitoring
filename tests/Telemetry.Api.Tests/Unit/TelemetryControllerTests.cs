@@ -47,4 +47,17 @@ public class TelemetryControllerTests
 
         Assert.IsType<NotFoundResult>(result.Result);
     }
+
+    [Fact]
+    public async Task ImportSession_PendingImport_ReturnsAccepted()
+    {
+        var import = new SessionImportDto(11396, Guid.NewGuid(), ImportStatus.Pending, null);
+        _importService.StartImportAsync(11396, Arg.Any<CancellationToken>()).Returns(import);
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .ImportSession(11396, CancellationToken.None);
+
+        var accepted = Assert.IsType<AcceptedResult>(result.Result);
+        Assert.Same(import, accepted.Value);
+    }
 }
