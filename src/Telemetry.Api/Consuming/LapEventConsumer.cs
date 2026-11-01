@@ -20,16 +20,34 @@ public class LapEventConsumer : BackgroundService
 
     public async Task HandleRaceEventAsync(RaceEvent raceEvent, CancellationToken cancellationToken = default)
     {
-        if (raceEvent.Type != EventTypes.LapCompleted)
+        if (raceEvent.Type != EventTypes.LapCompleted && raceEvent.Type != EventTypes.SessionImportFinished)
             return;
 
-        var payload = EventSerializer.ReadPayload<LapCompletedPayload>(raceEvent);
-        var lap = LapMapper.FromRaceEvent(raceEvent, payload);
-
         using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<ILapRepository>();
 
-        await repository.AddLapAsync(lap);
+        if (raceEvent.Type == EventTypes.LapCompleted)
+        {
+            var payload = EventSerializer.ReadPayload<LapCompletedPayload>(raceEvent);
+            var lap = LapMapper.FromRaceEvent(raceEvent, payload);
+            var lapRepository = scope.ServiceProvider.GetRequiredService<ILapRepository>();
+
+            await lapRepository.AddLapAsync(lap);
+            return;
+        }
+
+        var finishedPayload = EventSerializer.ReadPayload<SessionImportFinishedPayload>(raceEvent);
+        var sessionRepository = scope.ServiceProvider.GetRequiredService<ISessionRepository>();
+
+        if (finishedPayload.Error is null)
+        {
+            await sessionRepository.MarkImportFinishedAsync(
+                raceEvent.SessionKey, finishedPayload.ImportId, finishedPayload.LapCount, cancellationToken);
+        }
+        else
+        {
+            await sessionRepository.MarkImportFailedAsync(
+                raceEvent.SessionKey, finishedPayload.ImportId, finishedPayload.Error, cancellationToken);
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
