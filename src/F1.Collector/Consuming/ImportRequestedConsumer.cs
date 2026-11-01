@@ -33,7 +33,8 @@ public class ImportRequestedConsumer : BackgroundService
 
         var session = await _openF1Client.GetSessionAsync(request.SessionKey, cancellationToken);
         if (session is null)
-            return;
+            throw new KeyNotFoundException(
+                $"OpenF1 session {request.SessionKey} was not found.");
 
         var laps = await _openF1Client.GetLapsAsync(request.SessionKey, cancellationToken);
         var events = laps.Select(lap => LapEventMapper.Map(lap, session));
