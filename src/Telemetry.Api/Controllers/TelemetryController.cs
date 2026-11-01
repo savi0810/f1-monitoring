@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Telemetry.Api.Data.DTOs;
-using Telemetry.Api.Data.Models;
-using Telemetry.Api.Data.Repositories;
 using Telemetry.Api.Services;
 
 namespace Telemetry.Api.Controllers;
@@ -10,12 +8,10 @@ namespace Telemetry.Api.Controllers;
 [Route("api/telemetry")]
 public class TelemetryController : ControllerBase
 {
-    private readonly ILapRepository _lapRepository;
     private readonly ITelemetryQueryService _telemetryQueryService;
 
-    public TelemetryController(ILapRepository lapRepository, ITelemetryQueryService telemetryQueryService)
+    public TelemetryController(ITelemetryQueryService telemetryQueryService)
     {
-        _lapRepository = lapRepository;
         _telemetryQueryService = telemetryQueryService;
     }
 
@@ -26,9 +22,9 @@ public class TelemetryController : ControllerBase
     }
 
     [HttpGet("sessions/{sessionKey:int}/laps")]
-    public async Task<ActionResult<IReadOnlyList<Lap>>> GetSessionLaps(int sessionKey)
+    public async Task<ActionResult<IReadOnlyList<LapDto>>> GetSessionLaps(int sessionKey)
     {
-        var laps = await _lapRepository.GetLapsBySessionKeyAsync(sessionKey);
+        var laps = await _telemetryQueryService.GetSessionLapsAsync(sessionKey);
         return laps.Count == 0 ? NotFound() : Ok(laps);
     }
 }
