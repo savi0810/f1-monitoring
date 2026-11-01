@@ -40,6 +40,26 @@ public class SessionRepository : ISessionRepository
             .SingleOrDefaultAsync(s => s.SessionKey == sessionKey, cancellationToken);
     }
 
+    public async Task<bool> TryBeginImportAsync(
+        int sessionKey,
+        Guid importId,
+        CancellationToken cancellationToken = default)
+    {
+        var updated = await _context.Sessions
+            .Where(s => s.SessionKey == sessionKey
+                && !s.IsCancelled
+                && (s.ImportStatus == null
+                    || s.ImportStatus == ImportStatus.Failed))
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(s => s.ImportId, (Guid?)importId)
+                .SetProperty(s => s.ImportStatus, (ImportStatus?)ImportStatus.Pending)
+                .SetProperty(s => s.ImportCompletedAt, (DateTimeOffset?)null)
+                .SetProperty(s => s.ImportError, (string?)null),
+                cancellationToken);
+
+        return updated > 0;
+    }
+
     public async Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year)
     {
         var query = _context.Sessions.AsNoTracking();
