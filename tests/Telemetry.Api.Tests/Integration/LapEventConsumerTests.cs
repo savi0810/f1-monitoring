@@ -4,6 +4,8 @@ using NSubstitute;
 using RabbitMQ.Client;
 using Telemetry.Api.Consuming;
 using Telemetry.Api.Data;
+using Telemetry.Api.Data.DTOs;
+using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 using Telemetry.Api.Tests.Infrastructure;
 
@@ -19,6 +21,7 @@ public class LapEventConsumerTests : IDisposable
         var services = new ServiceCollection();
         services.AddScoped(_ => _db.Create());
         services.AddScoped<ILapRepository, LapRepository>();
+        services.AddScoped<ISessionRepository, SessionRepository>();
         _provider = services.BuildServiceProvider();
     }
 
@@ -41,6 +44,40 @@ public class LapEventConsumerTests : IDisposable
 
         var repository = new LapRepository(_db.Create());
         Assert.Single(await repository.GetLapsBySessionKeyAsync(11396));
+    }
+
+    [Fact]
+    public async Task HandleRaceEventAsync_SessionImportFinished_MarksImportCompleted()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        var importId = Guid.NewGuid();
+        await repository.UpsertSessionAsync(new Session
+        {
+            SessionKey = 11396,
+            MeetingKey = 1,
+            Year = 2026,
+            SessionType = "Race",
+            SessionName = "Race",
+            DateStart = DateTimeOffset.UtcNow,
+            DateEnd = DateTimeOffset.UtcNow,
+            IsCancelled = false
+        });
+        await repository.TryBeginImportAsync(11396, importId);
+        var raceEvent = new RaceEvent(
+            Guid.NewGuid(),
+            EventTypes.SessionImportFinished,
+            11396,
+            null,
+            null,
+            EventSerializer.WritePayload(new SessionImportFinishedPayload(importId, 5, null)));
+
+        await CreateConsumer().HandleRaceEventAsync(raceEvent);
+
+        var session = await repository.GetByKeyAsync(11396);
+        Assert.NotNull(session);
+        Assert.Equal(ImportStatus.Completed, session.ImportStatus);
+        Assert.NotNull(session.ImportCompletedAt);
     }
 
     [Fact]
