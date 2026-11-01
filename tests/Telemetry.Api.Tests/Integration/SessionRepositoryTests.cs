@@ -148,6 +148,35 @@ public class SessionRepositoryTests : IDisposable
         Assert.Equal(ImportStatus.Pending, session.ImportStatus);
     }
 
+    [Fact]
+    public async Task MarkImportFailedAsync_MatchingImportId_MarksPendingImportAsFailed()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession());
+        var importId = Guid.NewGuid();
+
+        await repository.TryBeginImportAsync(11731, importId);
+
+        var wrongImportUpdated = await repository.MarkImportFailedAsync(
+            11731,
+            Guid.NewGuid(),
+            "Publish failed");
+
+        var matchingImportUpdated = await repository.MarkImportFailedAsync(
+            11731,
+            importId,
+            "Publish failed");
+
+        var session = await repository.GetByKeyAsync(11731);
+
+        Assert.False(wrongImportUpdated);
+        Assert.True(matchingImportUpdated);
+        Assert.NotNull(session);
+        Assert.Equal(ImportStatus.Failed, session.ImportStatus);
+        Assert.Equal("Publish failed", session.ImportError);
+    }
+
     private static Lap NewLap(int sessionKey, int lapNumber) => new()
     {
         EventId = Guid.NewGuid(),
