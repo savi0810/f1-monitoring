@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Telemetry.Api.Data;
 using Telemetry.Api.Data.Repositories;
+using Telemetry.Api.Services;
 
 namespace Telemetry.Api.Extensions;
 
@@ -13,6 +14,7 @@ public static class TelemetryExtensions
 
         services.AddScoped<ILapRepository, LapRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
+        services.AddScoped<ISessionImportService, SessionImportService>();
 
         return services;
     }
