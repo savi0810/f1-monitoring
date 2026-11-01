@@ -3,6 +3,7 @@ using Serilog;
 using Telemetry.Api.Consuming;
 using Telemetry.Api.Data;
 using Telemetry.Api.Extensions;
+using Telemetry.Api.Publishing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,10 @@ builder.Services.AddHostedService<LapEventConsumer>();
 builder.Services.AddHostedService<SessionCatalogConsumer>();
 
 var app = builder.Build();
+
+await app.Services
+    .GetRequiredService<ImportRequestPublisher>()
+    .DeclareQueueAsync();
 
 using (var scope = app.Services.CreateScope())
 {
