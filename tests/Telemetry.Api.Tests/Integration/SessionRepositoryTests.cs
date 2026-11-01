@@ -100,6 +100,33 @@ public class SessionRepositoryTests : IDisposable
         Assert.Null(session);
     }
 
+    [Fact]
+    public async Task GetByKeyAsync_CancelledSession_ReturnsSession()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        var cancelled = NewSession();
+        cancelled.IsCancelled = true;
+        await repository.UpsertSessionAsync(cancelled);
+
+        var session = await repository.GetByKeyAsync(cancelled.SessionKey);
+
+        Assert.NotNull(session);
+        Assert.True(session.IsCancelled);
+    }
+
+    [Fact]
+    public async Task GetByKeyAsync_CancelledToken_ThrowsOperationCanceledException()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            repository.GetByKeyAsync(11731, cancellation.Token));
+    }
+
     private static Lap NewLap(int sessionKey, int lapNumber) => new()
     {
         EventId = Guid.NewGuid(),
