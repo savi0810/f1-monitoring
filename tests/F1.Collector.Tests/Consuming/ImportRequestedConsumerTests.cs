@@ -32,8 +32,9 @@ public class ImportRequestedConsumerTests
         var channel = Substitute.For<IChannel>();
         var eventPublisher = new EventPublisher(channel);
         var consumer = new ImportRequestedConsumer(channel, openF1Client, eventPublisher, NullLogger<ImportRequestedConsumer>.Instance);
+        var importId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-        await consumer.HandleImportRequestedAsync(new ImportRequested(11396));
+        await consumer.HandleImportRequestedAsync(new ImportRequested(11396, importId));
 
         await channel.Received(2).BasicPublishAsync(
             exchange: ExchangeNames.F1Events,
@@ -41,6 +42,16 @@ public class ImportRequestedConsumerTests
             mandatory: true,
             basicProperties: Arg.Any<BasicProperties>(),
             body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+
+        await channel.Received(1).BasicPublishAsync(
+            exchange: ExchangeNames.F1Events,
+            routingKey: "history.session_import_finished",
+            mandatory: true,
+            basicProperties: Arg.Any<BasicProperties>(),
+            body: Arg.Is<ReadOnlyMemory<byte>>(body =>
+                Encoding.UTF8.GetString(body.ToArray()).Contains($"\"importId\":\"{importId}\"") &&
+                Encoding.UTF8.GetString(body.ToArray()).Contains("\"lapCount\":2")),
             cancellationToken: Arg.Any<CancellationToken>());
     }
 
