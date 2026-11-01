@@ -1,4 +1,5 @@
 using Telemetry.Api.Data;
+using Telemetry.Api.Data.DTOs;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 using Telemetry.Api.Tests.Infrastructure;
@@ -125,6 +126,26 @@ public class SessionRepositoryTests : IDisposable
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             repository.GetByKeyAsync(11731, cancellation.Token));
+    }
+
+    [Fact]
+    public async Task TryBeginImportAsync_SecondRequest_DoesNotReplacePendingImport()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession());
+        var firstImportId = Guid.NewGuid();
+
+        var first = await repository.TryBeginImportAsync(11731, firstImportId);
+        var second = await repository.TryBeginImportAsync(11731, Guid.NewGuid());
+
+        Assert.True(first);
+        Assert.False(second);
+
+        var session = await repository.GetByKeyAsync(11731);
+        Assert.NotNull(session);
+        Assert.Equal(firstImportId, session.ImportId);
+        Assert.Equal(ImportStatus.Pending, session.ImportStatus);
     }
 
     private static Lap NewLap(int sessionKey, int lapNumber) => new()
