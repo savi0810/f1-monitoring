@@ -13,7 +13,7 @@ public class SessionCatalogPublisher : BackgroundService
 
     public SessionCatalogPublisher(
         OpenF1Client openF1Client,
-        EventPublisher eventPublisher,
+        [FromKeyedServices("catalog")] EventPublisher eventPublisher,
         ILogger<SessionCatalogPublisher> logger)
     {
         _openF1Client = openF1Client;
