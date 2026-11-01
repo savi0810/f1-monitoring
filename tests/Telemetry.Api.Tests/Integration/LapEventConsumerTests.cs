@@ -81,6 +81,43 @@ public class LapEventConsumerTests : IDisposable
     }
 
     [Fact]
+    public async Task HandleRaceEventAsync_SessionImportFinishedWithError_MarksImportFailed()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        var importId = Guid.NewGuid();
+        const string error = "OpenF1 request failed";
+
+        await repository.UpsertSessionAsync(new Session
+        {
+            SessionKey = 11396,
+            MeetingKey = 1,
+            Year = 2026,
+            SessionType = "Race",
+            SessionName = "Race",
+            DateStart = DateTimeOffset.UtcNow,
+            DateEnd = DateTimeOffset.UtcNow,
+            IsCancelled = false
+        });
+        await repository.TryBeginImportAsync(11396, importId);
+
+        var raceEvent = new RaceEvent(
+            Guid.NewGuid(),
+            EventTypes.SessionImportFinished,
+            11396,
+            null,
+            null,
+            EventSerializer.WritePayload(new SessionImportFinishedPayload(importId, 0, error)));
+
+        await CreateConsumer().HandleRaceEventAsync(raceEvent);
+
+        var session = await repository.GetByKeyAsync(11396);
+        Assert.NotNull(session);
+        Assert.Equal(ImportStatus.Failed, session.ImportStatus);
+        Assert.Equal(error, session.ImportError);
+    }
+
+    [Fact]
     public async Task HandleRaceEventAsync_UnknownType_DoesNothing()
     {
         var raceEvent = new RaceEvent(Guid.NewGuid(), "pit_stop", 11396, 1, DateTimeOffset.UtcNow,
