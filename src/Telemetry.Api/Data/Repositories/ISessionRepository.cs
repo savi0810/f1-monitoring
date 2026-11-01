@@ -16,5 +16,10 @@ public interface ISessionRepository
         Guid importId,
         string error,
         CancellationToken cancellationToken = default);
+    Task<bool> MarkImportFinishedAsync(
+        int sessionKey,
+        Guid importId,
+        int lapCount,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year);
 }

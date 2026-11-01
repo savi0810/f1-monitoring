@@ -78,6 +78,24 @@ public class SessionRepository : ISessionRepository
         return updated > 0;
     }
 
+    public async Task<bool> MarkImportFinishedAsync(
+        int sessionKey,
+        Guid importId,
+        int lapCount,
+        CancellationToken cancellationToken = default)
+    {
+        var status = lapCount > 0 ? ImportStatus.Completed : ImportStatus.Empty;
+        var updated = await _context.Sessions
+            .Where(s => s.SessionKey == sessionKey && s.ImportId == importId && s.ImportStatus == ImportStatus.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(s => s.ImportStatus, (ImportStatus?)status)
+                .SetProperty(s => s.ImportCompletedAt, (DateTimeOffset?)DateTimeOffset.UtcNow)
+                .SetProperty(s => s.ImportError, (string?)null),
+                cancellationToken);
+
+        return updated > 0;
+    }
+
     public async Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year)
     {
         var query = _context.Sessions.AsNoTracking();
