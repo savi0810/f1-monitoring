@@ -40,6 +40,17 @@ public class ImportRequestedConsumer : BackgroundService
         var events = laps.Select(lap => LapEventMapper.Map(lap, session));
 
         await _eventPublisher.PublishToExchangeAsync(events, RoutingKeys.History, cancellationToken);
+
+        var finishedPayload = new SessionImportFinishedPayload(request.ImportId, laps.Count, null);
+        var finishedEvent = new RaceEvent(
+            EventIdFactory.Create($"{EventTypes.SessionImportFinished}:{request.ImportId}"),
+            EventTypes.SessionImportFinished,
+            request.SessionKey,
+            null,
+            null,
+            EventSerializer.WritePayload(finishedPayload));
+
+        await _eventPublisher.PublishToExchangeAsync([finishedEvent], RoutingKeys.History, cancellationToken);
     }
 
     public async Task<bool> TryHandleAsync(string json, CancellationToken cancellationToken = default)
