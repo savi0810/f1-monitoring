@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Telemetry.Api.Data.DTOs;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
-using Telemetry.Api.Publishing;
+using Telemetry.Api.Services;
 
 namespace Telemetry.Api.Controllers;
 
@@ -11,23 +11,18 @@ namespace Telemetry.Api.Controllers;
 public class TelemetryController : ControllerBase
 {
     private readonly ILapRepository _lapRepository;
-    private readonly ISessionRepository _sessionRepository;
-    private readonly ImportRequestPublisher _importRequestPublisher;
+    private readonly ITelemetryQueryService _telemetryQueryService;
 
-    public TelemetryController(
-        ILapRepository lapRepository,
-        ISessionRepository sessionRepository,
-        ImportRequestPublisher importRequestPublisher)
+    public TelemetryController(ILapRepository lapRepository, ITelemetryQueryService telemetryQueryService)
     {
         _lapRepository = lapRepository;
-        _sessionRepository = sessionRepository;
-        _importRequestPublisher = importRequestPublisher;
+        _telemetryQueryService = telemetryQueryService;
     }
 
     [HttpGet("sessions")]
     public async Task<ActionResult<IReadOnlyList<SessionDto>>> GetSessions([FromQuery] string? type, [FromQuery] int? year)
     {
-        return Ok(await _sessionRepository.GetSessionsAsync(type, year));
+        return Ok(await _telemetryQueryService.GetSessionsAsync(type, year));
     }
 
     [HttpGet("sessions/{sessionKey:int}/laps")]
