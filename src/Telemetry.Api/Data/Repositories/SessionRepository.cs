@@ -33,6 +33,13 @@ public class SessionRepository : ISessionRepository
             """);
     }
 
+    public async Task<Session?> GetByKeyAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        return await _context.Sessions
+            .AsNoTracking()
+            .SingleOrDefaultAsync(s => s.SessionKey == sessionKey, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year)
     {
         var query = _context.Sessions.AsNoTracking();
