@@ -64,6 +64,42 @@ public class SessionRepositoryTests : IDisposable
         Assert.Null(stored.CountryName);
     }
 
+    [Fact]
+    public async Task GetByKeyAsync_ExistingSession_ReturnsSessionWithoutTracking()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession(11730, "Qualifying"));
+        await repository.UpsertSessionAsync(NewSession(11731));
+
+        var session = await repository.GetByKeyAsync(11731);
+
+        Assert.NotNull(session);
+        Assert.Equal(11731, session.SessionKey);
+        Assert.Equal(1308, session.MeetingKey);
+        Assert.Equal(2026, session.Year);
+        Assert.Equal("Race", session.SessionType);
+        Assert.Equal("Race", session.SessionName);
+        Assert.Equal("Kuala Lumpur", session.CircuitShortName);
+        Assert.Equal("Bahrain", session.CountryName);
+        Assert.Equal(NewSession().DateStart, session.DateStart);
+        Assert.Equal(NewSession().DateEnd, session.DateEnd);
+        Assert.False(session.IsCancelled);
+        Assert.Empty(context.ChangeTracker.Entries<Session>());
+    }
+
+    [Fact]
+    public async Task GetByKeyAsync_UnknownSession_ReturnsNull()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession());
+
+        var session = await repository.GetByKeyAsync(1);
+
+        Assert.Null(session);
+    }
+
     private static Lap NewLap(int sessionKey, int lapNumber) => new()
     {
         EventId = Guid.NewGuid(),
