@@ -60,6 +60,24 @@ public class SessionRepository : ISessionRepository
         return updated > 0;
     }
 
+    public async Task<bool> MarkImportFailedAsync(
+        int sessionKey,
+        Guid importId,
+        string error,
+        CancellationToken cancellationToken = default)
+    {
+        var updated = await _context.Sessions
+            .Where(s => s.SessionKey == sessionKey
+                && s.ImportId == importId
+                && s.ImportStatus == ImportStatus.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(s => s.ImportStatus, (ImportStatus?)ImportStatus.Failed)
+                .SetProperty(s => s.ImportError, error),
+                cancellationToken);
+
+        return updated > 0;
+    }
+
     public async Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year)
     {
         var query = _context.Sessions.AsNoTracking();
