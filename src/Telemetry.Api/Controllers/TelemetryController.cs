@@ -27,8 +27,20 @@ public class TelemetryController : ControllerBase
     [HttpGet("sessions/{sessionKey:int}/laps")]
     public async Task<ActionResult<IReadOnlyList<LapDto>>> GetSessionLaps(int sessionKey)
     {
-        var laps = await _telemetryQueryService.GetSessionLapsAsync(sessionKey);
-        return laps.Count == 0 ? NotFound() : Ok(laps);
+        if (!await _telemetryQueryService.SessionExistsAsync(sessionKey))
+            return NotFound();
+
+        return Ok(await _telemetryQueryService.GetSessionLapsAsync(sessionKey));
+    }
+
+    [HttpGet("sessions/{sessionKey:int}/import")]
+    public async Task<ActionResult<SessionImportDto?>> GetImportStatus(int sessionKey, CancellationToken cancellationToken)
+    {
+        var result = await _sessionImportService.GetImportStatusAsync(sessionKey, cancellationToken);
+        if (!result.SessionExists)
+            return NotFound();
+
+        return Ok(result.Import);
     }
 
     [Authorize]
@@ -43,7 +55,8 @@ public class TelemetryController : ControllerBase
 
             return result.Status switch
             {
-                ImportStatus.Pending or ImportStatus.Processing => Accepted(result),
+                ImportStatus.Pending or ImportStatus.Processing =>
+                    Accepted(Url.Action(nameof(GetImportStatus), new { sessionKey }), result),
                 ImportStatus.Failed => StatusCode(503, result),
                 _ => Ok(result)
             };
