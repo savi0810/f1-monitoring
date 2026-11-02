@@ -53,7 +53,8 @@ public class TelemetryController : ControllerBase
 
             return result.Status switch
             {
-                ImportStatus.Pending or ImportStatus.Processing => Accepted(result),
+                ImportStatus.Pending or ImportStatus.Processing =>
+                    AcceptedAtAction(nameof(GetImportStatus), new { sessionKey }, result),
                 ImportStatus.Failed => StatusCode(503, result),
                 _ => Ok(result)
             };
