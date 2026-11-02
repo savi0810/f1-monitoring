@@ -1,0 +1,15 @@
+{
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "alerts-events-dlx",
+      "pattern": "^alerts\\.events$",
+      "apply-to": "queues",
+      "definition": {
+        "dead-letter-exchange": "alerts.dlx",
+        "dead-letter-routing-key": "alerts.events.dead"
+      },
+      "priority": 10
+    }
+  ]
+}
