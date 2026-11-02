@@ -15,6 +15,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddAlertsServices(builder.Configuration);
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -32,6 +33,7 @@ app.UseSerilogRequestLogging();
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Alerts.Api v1"));
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
