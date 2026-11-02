@@ -31,7 +31,7 @@ public class AlertsEventConsumer : BackgroundService
         await _channel.QueueBindAsync(
             queue: QueueNames.AlertsEvents,
             exchange: ExchangeNames.F1Events,
-            routingKey: RoutingKeys.LiveEvents,
+            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.LapCompleted),
             cancellationToken: stoppingToken);
     }
 }
