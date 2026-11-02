@@ -5,5 +5,6 @@ namespace Telemetry.Api.Services;
 public interface ITelemetryQueryService
 {
     Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year);
+    Task<bool> SessionExistsAsync(int sessionKey);
     Task<IReadOnlyList<LapDto>> GetSessionLapsAsync(int sessionKey);
 }

@@ -17,6 +17,9 @@ public class TelemetryQueryService : ITelemetryQueryService
     public Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year) =>
         _sessionRepository.GetSessionsAsync(type, year);
 
+    public async Task<bool> SessionExistsAsync(int sessionKey) =>
+        await _sessionRepository.GetByKeyAsync(sessionKey) is not null;
+
     public async Task<IReadOnlyList<LapDto>> GetSessionLapsAsync(int sessionKey)
     {
         var laps = await _lapRepository.GetLapsBySessionKeyAsync(sessionKey);
