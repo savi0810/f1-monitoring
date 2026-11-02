@@ -30,12 +30,25 @@ public class TelemetryControllerTests
     public async Task GetSessionLaps_KnownSession_ReturnsLaps()
     {
         IReadOnlyList<LapDto> laps = [new(Guid.NewGuid(), 11396, null, 1, null, null, null, null, false, null)];
+        _queryService.SessionExistsAsync(11396).Returns(true);
         _queryService.GetSessionLapsAsync(11396).Returns(laps);
 
         var result = await new TelemetryController(_queryService, _importService).GetSessionLaps(11396);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(laps, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetSessionLaps_KnownSessionWithoutLaps_ReturnsEmptyList()
+    {
+        _queryService.SessionExistsAsync(11396).Returns(true);
+        _queryService.GetSessionLapsAsync(11396).Returns(Array.Empty<LapDto>());
+
+        var result = await new TelemetryController(_queryService, _importService).GetSessionLaps(11396);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Empty(Assert.IsAssignableFrom<IReadOnlyList<LapDto>>(ok.Value));
     }
 
     [Fact]
