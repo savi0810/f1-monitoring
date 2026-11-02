@@ -60,4 +60,18 @@ public class TelemetryControllerTests
         var accepted = Assert.IsType<AcceptedResult>(result.Result);
         Assert.Same(import, accepted.Value);
     }
+
+    [Fact]
+    public async Task GetImportStatus_ExistingImport_ReturnsImport()
+    {
+        var import = new SessionImportDto(11396, Guid.NewGuid(), ImportStatus.Pending, null);
+        _importService.GetImportStatusAsync(11396, Arg.Any<CancellationToken>())
+            .Returns((true, import));
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .GetImportStatus(11396, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Same(import, ok.Value);
+    }
 }
