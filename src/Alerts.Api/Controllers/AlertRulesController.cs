@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Alerts.Api.Data.DTOs;
 using Alerts.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,5 +16,14 @@ public class AlertRulesController : ControllerBase
     public AlertRulesController(IAlertRuleService service)
     {
         _service = service;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<AlertRuleDto>>> GetRules()
+    {
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            return Unauthorized();
+
+        return Ok(await _service.GetByUserIdAsync(userId));
     }
 }
