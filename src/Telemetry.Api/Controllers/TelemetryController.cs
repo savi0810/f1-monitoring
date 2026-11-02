@@ -31,6 +31,16 @@ public class TelemetryController : ControllerBase
         return laps.Count == 0 ? NotFound() : Ok(laps);
     }
 
+    [HttpGet("sessions/{sessionKey:int}/import")]
+    public async Task<ActionResult<SessionImportDto?>> GetImportStatus(int sessionKey, CancellationToken cancellationToken)
+    {
+        var result = await _sessionImportService.GetImportStatusAsync(sessionKey, cancellationToken);
+        if (!result.SessionExists)
+            return NotFound();
+
+        return Ok(result.Import);
+    }
+
     [Authorize]
     [HttpPost("sessions/{sessionKey:int}/import")]
     public async Task<ActionResult<SessionImportDto>> ImportSession(int sessionKey, CancellationToken cancellationToken)
