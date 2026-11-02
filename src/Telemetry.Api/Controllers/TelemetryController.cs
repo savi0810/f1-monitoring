@@ -27,8 +27,10 @@ public class TelemetryController : ControllerBase
     [HttpGet("sessions/{sessionKey:int}/laps")]
     public async Task<ActionResult<IReadOnlyList<LapDto>>> GetSessionLaps(int sessionKey)
     {
-        var laps = await _telemetryQueryService.GetSessionLapsAsync(sessionKey);
-        return laps.Count == 0 ? NotFound() : Ok(laps);
+        if (!await _telemetryQueryService.SessionExistsAsync(sessionKey))
+            return NotFound();
+
+        return Ok(await _telemetryQueryService.GetSessionLapsAsync(sessionKey));
     }
 
     [HttpGet("sessions/{sessionKey:int}/import")]
