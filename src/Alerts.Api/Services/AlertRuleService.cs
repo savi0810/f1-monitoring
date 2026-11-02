@@ -26,4 +26,12 @@ public class AlertRuleService
 
         return new AlertRuleDto(rule.Id, rule.DriverNumber, rule.LapTimeThresholdSeconds);
     }
+
+    public async Task<IReadOnlyList<AlertRuleDto>> GetByUserIdAsync(Guid userId)
+    {
+        var rules = await _repository.GetByUserIdAsync(userId);
+
+        return rules.Select(rule =>
+            new AlertRuleDto(rule.Id, rule.DriverNumber, rule.LapTimeThresholdSeconds)).ToList();
+    }
 }
