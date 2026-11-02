@@ -64,6 +64,21 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  postgres-alerts:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: alertsdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_alerts_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d alertsdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   alerts-api:
     build:
       context: .
@@ -71,8 +86,12 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres-alerts;Port=5432;Database=alertsdb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
     ports:
       - "5262:8080"
+    depends_on:
+      postgres-alerts:
+        condition: service_healthy
 
   live-api:
     build:
@@ -129,3 +148,4 @@ services:
 volumes:
   postgres_auth_data:
   postgres_telemetry_data:
+  postgres_alerts_data:
