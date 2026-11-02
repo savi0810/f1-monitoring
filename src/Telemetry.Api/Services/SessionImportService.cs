@@ -32,6 +32,19 @@ public class SessionImportService : ISessionImportService
         return await StartImportForSessionAsync(session, cancellationToken);
     }
 
+    public async Task<(bool SessionExists, SessionImportDto? Import)> GetImportStatusAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        var session = await _sessionRepository.GetByKeyAsync(sessionKey, cancellationToken);
+
+        if (session is null)
+            return (false, null);
+
+        if (session.ImportId is not Guid importId || session.ImportStatus is not ImportStatus status)
+            return (true, null);
+
+        return (true, new(session.SessionKey, importId, status, session.ImportError));
+    }
+
     private async Task<SessionImportDto> StartImportForSessionAsync(Session session, CancellationToken cancellationToken)
     {
         if (session.ImportId is Guid existingId && session.ImportStatus is ImportStatus existingStatus
