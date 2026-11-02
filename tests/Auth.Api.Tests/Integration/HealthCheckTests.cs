@@ -1,7 +1,7 @@
 using System.Net;
 using Auth.Api.Tests.Infrastructure;
 
-namespace Auth.Api.Tests;
+namespace Auth.Api.Tests.Integration;
 
 public class HealthCheckTests : IClassFixture<AuthApiFactory>
 {

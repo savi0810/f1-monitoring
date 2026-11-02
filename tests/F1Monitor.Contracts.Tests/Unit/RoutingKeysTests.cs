@@ -1,4 +1,4 @@
-namespace F1Monitor.Contracts.Tests;
+namespace F1Monitor.Contracts.Tests.Unit;
 
 public class RoutingKeysTests
 {

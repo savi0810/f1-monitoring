@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using RabbitMQ.Client;
 
-namespace F1.Collector.Tests.Consuming;
+namespace F1.Collector.Tests.Integration;
 
 public class ImportRequestedConsumerTests
 {

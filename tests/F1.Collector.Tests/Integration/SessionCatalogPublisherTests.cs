@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using RabbitMQ.Client;
 
-namespace F1.Collector.Tests.Publishing;
+namespace F1.Collector.Tests.Integration;
 
 public class SessionCatalogPublisherTests
 {
