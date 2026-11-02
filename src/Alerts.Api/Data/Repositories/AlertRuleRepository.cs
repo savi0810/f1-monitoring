@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Alerts.Api.Data.Repositories;
 
-public class AlertRuleRepository
+public class AlertRuleRepository : IAlertRuleRepository
 {
     private readonly AppDbContext _context;
 
@@ -24,5 +24,14 @@ public class AlertRuleRepository
             .AsNoTracking()
             .Where(rule => rule.UserId == userId)
             .ToListAsync();
+    }
+
+    public async Task<bool> DeleteAsync(Guid ruleId, Guid userId)
+    {
+        var deleted = await _context.AlertRules
+            .Where(rule => rule.Id == ruleId && rule.UserId == userId)
+            .ExecuteDeleteAsync();
+
+        return deleted > 0;
     }
 }
