@@ -26,4 +26,14 @@ public class AlertRulesController : ControllerBase
 
         return Ok(await _service.GetByUserIdAsync(userId));
     }
+
+    [HttpPost]
+    public async Task<ActionResult<AlertRuleDto>> CreateRule(CreateAlertRuleDto request)
+    {
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            return Unauthorized();
+
+        var rule = await _service.CreateAsync(userId, request);
+        return Ok(rule);
+    }
 }
