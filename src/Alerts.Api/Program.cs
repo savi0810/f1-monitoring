@@ -1,3 +1,4 @@
+using Alerts.Api.Consuming;
 using Alerts.Api.Data;
 using Alerts.Api.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddAlertsServices(builder.Configuration);
 builder.Services.AddRabbitMq(builder.Configuration);
+builder.Services.AddHostedService<AlertsEventConsumer>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
