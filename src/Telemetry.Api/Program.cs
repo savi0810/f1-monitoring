@@ -3,6 +3,7 @@ using Serilog;
 using Telemetry.Api.Consuming;
 using Telemetry.Api.Data;
 using Telemetry.Api.Extensions;
+using Telemetry.Api.Publishing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,10 +18,15 @@ builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddTelemetryServices(builder.Configuration);
 builder.Services.AddRabbitMq(builder.Configuration);
+builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddHostedService<LapEventConsumer>();
 builder.Services.AddHostedService<SessionCatalogConsumer>();
 
 var app = builder.Build();
+
+await app.Services
+    .GetRequiredService<ImportRequestPublisher>()
+    .DeclareQueueAsync();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -36,6 +42,7 @@ app.UseSerilogRequestLogging();
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Telemetry.Api v1"));
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,3 +1,5 @@
+using Telemetry.Api.Data.DTOs;
+
 namespace Telemetry.Api.Data.Models;
 
 public class Session
@@ -12,4 +14,8 @@ public class Session
     public DateTimeOffset DateStart { get; set; }
     public DateTimeOffset DateEnd { get; set; }
     public bool IsCancelled { get; set; }
+    public Guid? ImportId { get; set; }
+    public ImportStatus? ImportStatus { get; set; }
+    public DateTimeOffset? ImportCompletedAt { get; set; }
+    public string? ImportError { get; set; }
 }

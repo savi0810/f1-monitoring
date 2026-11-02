@@ -1,3 +1,3 @@
 namespace F1Monitor.Contracts;
 
-public record ImportRequested(int SessionKey);
+public record ImportRequested(int SessionKey, Guid ImportId = default);

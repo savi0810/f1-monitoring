@@ -2,15 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using Telemetry.Api.Controllers;
 using Telemetry.Api.Data.DTOs;
-using Telemetry.Api.Data.Models;
-using Telemetry.Api.Data.Repositories;
+using Telemetry.Api.Services;
 
 namespace Telemetry.Api.Tests.Unit;
 
 public class TelemetryControllerTests
 {
-    private readonly ILapRepository _repository = Substitute.For<ILapRepository>();
-    private readonly ISessionRepository _sessionRepository = Substitute.For<ISessionRepository>();
+    private readonly ITelemetryQueryService _queryService = Substitute.For<ITelemetryQueryService>();
+    private readonly ISessionImportService _importService = Substitute.For<ISessionImportService>();
 
     [Fact]
     public async Task GetSessions_ReturnsSessionsFromSessionRepository()
@@ -19,9 +18,9 @@ public class TelemetryControllerTests
         [
             new SessionDto(11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, false, 1145)
         ];
-        _sessionRepository.GetSessionsAsync("Race", 2026).Returns(sessions);
+        _queryService.GetSessionsAsync("Race", 2026).Returns(sessions);
 
-        var result = await new TelemetryController(_repository, _sessionRepository).GetSessions("Race", 2026);
+        var result = await new TelemetryController(_queryService, _importService).GetSessions("Race", 2026);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(sessions, ok.Value);
@@ -30,10 +29,10 @@ public class TelemetryControllerTests
     [Fact]
     public async Task GetSessionLaps_KnownSession_ReturnsLaps()
     {
-        IReadOnlyList<Lap> laps = [new Lap { EventId = Guid.NewGuid(), SessionKey = 11396, LapNumber = 1 }];
-        _repository.GetLapsBySessionKeyAsync(11396).Returns(laps);
+        IReadOnlyList<LapDto> laps = [new(Guid.NewGuid(), 11396, null, 1, null, null, null, null, false, null)];
+        _queryService.GetSessionLapsAsync(11396).Returns(laps);
 
-        var result = await new TelemetryController(_repository, _sessionRepository).GetSessionLaps(11396);
+        var result = await new TelemetryController(_queryService, _importService).GetSessionLaps(11396);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(laps, ok.Value);
@@ -42,10 +41,23 @@ public class TelemetryControllerTests
     [Fact]
     public async Task GetSessionLaps_UnknownSession_ReturnsNotFound()
     {
-        _repository.GetLapsBySessionKeyAsync(1).Returns(Array.Empty<Lap>());
+        _queryService.GetSessionLapsAsync(1).Returns(Array.Empty<LapDto>());
 
-        var result = await new TelemetryController(_repository, _sessionRepository).GetSessionLaps(1);
+        var result = await new TelemetryController(_queryService, _importService).GetSessionLaps(1);
 
         Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task ImportSession_PendingImport_ReturnsAccepted()
+    {
+        var import = new SessionImportDto(11396, Guid.NewGuid(), ImportStatus.Pending, null);
+        _importService.StartImportAsync(11396, Arg.Any<CancellationToken>()).Returns(import);
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .ImportSession(11396, CancellationToken.None);
+
+        var accepted = Assert.IsType<AcceptedResult>(result.Result);
+        Assert.Same(import, accepted.Value);
     }
 }

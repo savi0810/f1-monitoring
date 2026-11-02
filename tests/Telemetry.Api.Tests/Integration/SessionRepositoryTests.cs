@@ -1,4 +1,5 @@
 using Telemetry.Api.Data;
+using Telemetry.Api.Data.DTOs;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 using Telemetry.Api.Tests.Infrastructure;
@@ -125,6 +126,96 @@ public class SessionRepositoryTests : IDisposable
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             repository.GetByKeyAsync(11731, cancellation.Token));
+    }
+
+    [Fact]
+    public async Task TryBeginImportAsync_SecondRequest_DoesNotReplacePendingImport()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession());
+        var firstImportId = Guid.NewGuid();
+
+        var first = await repository.TryBeginImportAsync(11731, firstImportId);
+        var second = await repository.TryBeginImportAsync(11731, Guid.NewGuid());
+
+        Assert.True(first);
+        Assert.False(second);
+
+        var session = await repository.GetByKeyAsync(11731);
+        Assert.NotNull(session);
+        Assert.Equal(firstImportId, session.ImportId);
+        Assert.Equal(ImportStatus.Pending, session.ImportStatus);
+    }
+
+    [Fact]
+    public async Task MarkImportFailedAsync_MatchingImportId_MarksPendingImportAsFailed()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession());
+        var importId = Guid.NewGuid();
+
+        await repository.TryBeginImportAsync(11731, importId);
+
+        var wrongImportUpdated = await repository.MarkImportFailedAsync(
+            11731,
+            Guid.NewGuid(),
+            "Publish failed");
+
+        var matchingImportUpdated = await repository.MarkImportFailedAsync(
+            11731,
+            importId,
+            "Publish failed");
+
+        var session = await repository.GetByKeyAsync(11731);
+
+        Assert.False(wrongImportUpdated);
+        Assert.True(matchingImportUpdated);
+        Assert.NotNull(session);
+        Assert.Equal(ImportStatus.Failed, session.ImportStatus);
+        Assert.Equal("Publish failed", session.ImportError);
+    }
+
+    [Fact]
+    public async Task MarkImportFinishedAsync_MatchingImportId_CompletesPendingImport()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession());
+        var importId = Guid.NewGuid();
+
+        await repository.TryBeginImportAsync(11731, importId);
+
+        var wrongImportUpdated = await repository.MarkImportFinishedAsync(11731, Guid.NewGuid(), 2);
+        var matchingImportUpdated = await repository.MarkImportFinishedAsync(11731, importId, 2);
+        var session = await repository.GetByKeyAsync(11731);
+
+        Assert.False(wrongImportUpdated);
+        Assert.True(matchingImportUpdated);
+        Assert.NotNull(session);
+        Assert.Equal(ImportStatus.Completed, session.ImportStatus);
+        Assert.NotNull(session.ImportCompletedAt);
+        Assert.Null(session.ImportError);
+    }
+
+    [Fact]
+    public async Task MarkImportFinishedAsync_NoLaps_MarksImportAsEmpty()
+    {
+        await using var context = _db.Create();
+        var repository = new SessionRepository(context);
+        await repository.UpsertSessionAsync(NewSession());
+        var importId = Guid.NewGuid();
+
+        await repository.TryBeginImportAsync(11731, importId);
+
+        var updated = await repository.MarkImportFinishedAsync(11731, importId, 0);
+        var session = await repository.GetByKeyAsync(11731);
+
+        Assert.True(updated);
+        Assert.NotNull(session);
+        Assert.Equal(ImportStatus.Empty, session.ImportStatus);
+        Assert.NotNull(session.ImportCompletedAt);
     }
 
     private static Lap NewLap(int sessionKey, int lapNumber) => new()

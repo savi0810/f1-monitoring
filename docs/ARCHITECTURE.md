@@ -1,6 +1,6 @@
 # Архитектура системы
 
-Статус: начальный черновик. Документ будет дополняться по мере разработки.
+Статус:  реализован и проверен сквозной импорт статичных данных сессии. Live-сценарий и клиентский интерфейс ещё не завершены.
 
 ## 1. Цель и контекст
 
@@ -33,7 +33,7 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 | Telemetry.Api | Хранение событий гонок, список гонок, просмотр гонки, сравнение пилотов | PostgreSQL `telemetrydb` | `import.requested` | `f1.events` |
 | Alerts.Api | Правила, подписки, избранные пилоты, журнал уведомлений | PostgreSQL `alertsdb` | `alert.triggered` | `f1.events` |
 | Live.Api | SignalR-хаб, текущее состояние гонки, рассылка событий и уведомлений | Redis | — | `f1.events`, `alert.triggered` |
-| f1-collector (Python) | Получение данных из F1 Live Timing и OpenF1, публикация событий | нет | `f1.events` | `import.requested` |
+| F1.Collector | Получение данных из OpenF1, публикация событий | нет | `f1.events` | `import.requested` |
 | Frontend | Клиент на Vue 3 | нет | — | — |
 
 ### Примерные эндпоинты
@@ -44,9 +44,9 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 |--------|--------|-----------|
 | Auth.Api | `POST /api/auth/register` | Регистрация |
 | Auth.Api | `POST /api/auth/login` | Вход по email и паролю, выдача JWT |
-| Telemetry.Api | `GET /api/telemetry/sessions` | Список сессий (практики, квалификации, гонки) с числом кругов |
+| Telemetry.Api | `GET /api/telemetry/sessions?type=&year=` | Каталог сессий с числом сохранённых кругов |
 | Telemetry.Api | `GET /api/telemetry/sessions/{sessionKey}/laps` | Круги выбранной сессии, 404 если данных нет |
-| Telemetry.Api | `GET /api/telemetry/compare` | Сравнение двух пилотов |
+| Telemetry.Api | `POST /api/telemetry/sessions/{sessionKey}/import` | Запускает импорт; требует JWT, возвращает `202 Accepted` для принятого запроса |
 | Alerts.Api | `GET, POST, DELETE /api/alerts/rules` | Правила уведомлений |
 | Alerts.Api | `GET, POST, DELETE /api/alerts/favorites` | Избранные пилоты |
 | Alerts.Api | `GET /api/alerts/history` | Журнал уведомлений |
@@ -59,8 +59,6 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 - `telemetrydb`: гонки, события гонок.
 - `alertsdb`: правила, избранные пилоты, журнал уведомлений.
 - Redis: снимок текущей гонки.
-
-Все события в `f1.events` имеют единый формат, он будет описан в `docs/events.schema.json`.
 
 ## 6. Взаимодействие сервисов
 

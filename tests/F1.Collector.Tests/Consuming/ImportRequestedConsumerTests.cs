@@ -32,8 +32,9 @@ public class ImportRequestedConsumerTests
         var channel = Substitute.For<IChannel>();
         var eventPublisher = new EventPublisher(channel);
         var consumer = new ImportRequestedConsumer(channel, openF1Client, eventPublisher, NullLogger<ImportRequestedConsumer>.Instance);
+        var importId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-        await consumer.HandleImportRequestedAsync(new ImportRequested(11396));
+        await consumer.HandleImportRequestedAsync(new ImportRequested(11396, importId));
 
         await channel.Received(2).BasicPublishAsync(
             exchange: ExchangeNames.F1Events,
@@ -41,6 +42,16 @@ public class ImportRequestedConsumerTests
             mandatory: true,
             basicProperties: Arg.Any<BasicProperties>(),
             body: Arg.Any<ReadOnlyMemory<byte>>(),
+            cancellationToken: Arg.Any<CancellationToken>());
+
+        await channel.Received(1).BasicPublishAsync(
+            exchange: ExchangeNames.F1Events,
+            routingKey: "history.session_import_finished",
+            mandatory: true,
+            basicProperties: Arg.Any<BasicProperties>(),
+            body: Arg.Is<ReadOnlyMemory<byte>>(body =>
+                Encoding.UTF8.GetString(body.ToArray()).Contains($"\"importId\":\"{importId}\"") &&
+                Encoding.UTF8.GetString(body.ToArray()).Contains("\"lapCount\":2")),
             cancellationToken: Arg.Any<CancellationToken>());
     }
 
@@ -114,23 +125,28 @@ public class ImportRequestedConsumerTests
     }
 
     [Fact]
-    public async Task TryHandleAsync_OpenF1Fails_ReturnsFalseAndPublishesNothing()
+    public async Task TryHandleAsync_OpenF1Fails_PublishesFailedImportEvent()
     {
         var handler = new FakeHttpMessageHandler(HttpStatusCode.InternalServerError, "boom");
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
         var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
         var channel = Substitute.For<IChannel>();
         var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel), NullLogger<ImportRequestedConsumer>.Instance);
+        var importId = Guid.NewGuid();
 
-        var handled = await consumer.TryHandleAsync("""{"sessionKey":11396}""");
+        var handled = await consumer.TryHandleAsync(
+            EventSerializer.Serialize(new ImportRequested(11396, importId)));
 
-        Assert.False(handled);
-        await channel.DidNotReceive().BasicPublishAsync(
-            exchange: Arg.Any<string>(),
-            routingKey: Arg.Any<string>(),
-            mandatory: Arg.Any<bool>(),
+        Assert.True(handled);
+        await channel.Received(1).BasicPublishAsync(
+            exchange: ExchangeNames.F1Events,
+            routingKey: "history.session_import_finished",
+            mandatory: true,
             basicProperties: Arg.Any<BasicProperties>(),
-            body: Arg.Any<ReadOnlyMemory<byte>>(),
+            body: Arg.Is<ReadOnlyMemory<byte>>(message =>
+                Encoding.UTF8.GetString(message.ToArray()).Contains($"\"importId\":\"{importId}\"") &&
+                Encoding.UTF8.GetString(message.ToArray()).Contains("\"lapCount\":0") &&
+                !Encoding.UTF8.GetString(message.ToArray()).Contains("\"error\":null")),
             cancellationToken: Arg.Any<CancellationToken>());
     }
 
