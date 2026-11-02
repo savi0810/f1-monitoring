@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using NSubstitute;
 using Telemetry.Api.Controllers;
 using Telemetry.Api.Data.DTOs;
@@ -67,12 +68,14 @@ public class TelemetryControllerTests
         var import = new SessionImportDto(11396, Guid.NewGuid(), ImportStatus.Pending, null);
         _importService.StartImportAsync(11396, Arg.Any<CancellationToken>()).Returns(import);
 
-        var result = await new TelemetryController(_queryService, _importService)
-            .ImportSession(11396, CancellationToken.None);
+        var url = Substitute.For<IUrlHelper>();
+        url.Action(Arg.Any<UrlActionContext>()).Returns("/api/telemetry/sessions/11396/import");
+        var controller = new TelemetryController(_queryService, _importService) { Url = url };
 
-        var accepted = Assert.IsType<AcceptedAtActionResult>(result.Result);
-        Assert.Equal(nameof(TelemetryController.GetImportStatus), accepted.ActionName);
-        Assert.Equal(11396, accepted.RouteValues!["sessionKey"]);
+        var result = await controller.ImportSession(11396, CancellationToken.None);
+
+        var accepted = Assert.IsType<AcceptedResult>(result.Result);
+        Assert.Equal("/api/telemetry/sessions/11396/import", accepted.Location);
         Assert.Same(import, accepted.Value);
     }
 
