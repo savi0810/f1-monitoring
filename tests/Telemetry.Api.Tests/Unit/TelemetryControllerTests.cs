@@ -74,4 +74,29 @@ public class TelemetryControllerTests
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(import, ok.Value);
     }
+
+    [Fact]
+    public async Task GetImportStatus_NoImport_ReturnsOkWithNull()
+    {
+        _importService.GetImportStatusAsync(11396, Arg.Any<CancellationToken>())
+            .Returns((true, (SessionImportDto?)null));
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .GetImportStatus(11396, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Null(ok.Value);
+    }
+
+    [Fact]
+    public async Task GetImportStatus_UnknownSession_ReturnsNotFound()
+    {
+        _importService.GetImportStatusAsync(1, Arg.Any<CancellationToken>())
+            .Returns((false, (SessionImportDto?)null));
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .GetImportStatus(1, CancellationToken.None);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
 }
