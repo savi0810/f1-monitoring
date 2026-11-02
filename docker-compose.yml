@@ -90,10 +90,13 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: F1Monitor.Auth
       Jwt__Audience: F1Monitor
+      RabbitMq__Host: rabbitmq
     ports:
       - "5262:8080"
     depends_on:
       postgres-alerts:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   live-api:
