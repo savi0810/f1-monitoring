@@ -36,4 +36,30 @@ public class AlertRuleRepositoryTests
         Assert.False(deleted);
         Assert.True(await context.AlertRules.AnyAsync(item => item.Id == rule.Id));
     }
+
+    [Fact]
+    public async Task GetByUserIdAsync_ReturnsOnlyUsersRules()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var context = new AppDbContext(options);
+        await context.Database.EnsureCreatedAsync();
+
+        var userId = Guid.NewGuid();
+        var ownRule = new AlertRule { UserId = userId, DriverNumber = 1, LapTimeThresholdSeconds = 90 };
+        var otherRule = new AlertRule { UserId = Guid.NewGuid(), DriverNumber = 2, LapTimeThresholdSeconds = 95 };
+
+        context.AlertRules.AddRange(ownRule, otherRule);
+        await context.SaveChangesAsync();
+
+        var rules = await new AlertRuleRepository(context).GetByUserIdAsync(userId);
+
+        var rule = Assert.Single(rules);
+        Assert.Equal(ownRule.Id, rule.Id);
+    }
 }
