@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using RabbitMQ.Client;
 
-namespace F1.Collector.Tests.Publishing;
+namespace F1.Collector.Tests.Unit;
 
 public class EventPublisherTests
 {

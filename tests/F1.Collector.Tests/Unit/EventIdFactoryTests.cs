@@ -1,6 +1,6 @@
 using F1.Collector.Mapping;
 
-namespace F1.Collector.Tests.Mapping;
+namespace F1.Collector.Tests.Unit;
 
 public class EventIdFactoryTests
 {

@@ -1,7 +1,7 @@
 using F1.Collector.Mapping;
 using F1.Collector.OpenF1;
 
-namespace F1.Collector.Tests.Mapping;
+namespace F1.Collector.Tests.Unit;
 
 public class SessionAvailableMapperTests
 {

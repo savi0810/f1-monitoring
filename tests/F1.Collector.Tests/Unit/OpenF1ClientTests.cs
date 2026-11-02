@@ -2,7 +2,7 @@ using System.Net;
 using F1.Collector.OpenF1;
 using F1.Collector.Tests.Infrastructure;
 
-namespace F1.Collector.Tests.OpenF1;
+namespace F1.Collector.Tests.Unit;
 
 public class OpenF1ClientTests
 {
