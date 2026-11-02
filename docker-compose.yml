@@ -87,6 +87,9 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=postgres-alerts;Port=5432;Database=alertsdb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: F1Monitor.Auth
+      Jwt__Audience: F1Monitor
     ports:
       - "5262:8080"
     depends_on:
