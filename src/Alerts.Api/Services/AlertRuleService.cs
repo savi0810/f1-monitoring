@@ -4,7 +4,7 @@ using Alerts.Api.Data.Repositories;
 
 namespace Alerts.Api.Services;
 
-public class AlertRuleService
+public class AlertRuleService : IAlertRuleService
 {
     private readonly IAlertRuleRepository _repository;
 
@@ -34,4 +34,7 @@ public class AlertRuleService
         return rules.Select(rule =>
             new AlertRuleDto(rule.Id, rule.DriverNumber, rule.LapTimeThresholdSeconds)).ToList();
     }
+
+    public Task<bool> DeleteAsync(Guid ruleId, Guid userId) =>
+        _repository.DeleteAsync(ruleId, userId);
 }
