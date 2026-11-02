@@ -1,4 +1,5 @@
 using Alerts.Api.Data;
+using Alerts.Api.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Alerts.Api.Extensions;
@@ -9,6 +10,8 @@ public static class AlertsExtensions
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+        services.AddScoped<IAlertRuleRepository, AlertRuleRepository>();
 
         return services;
     }
