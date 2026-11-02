@@ -109,6 +109,9 @@ services:
   rabbitmq:
     image: rabbitmq:4-management
     restart: unless-stopped
+    volumes:
+      - ./deploy/rabbitmq-config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./deploy/rabbitmq-config/definitions.json:/etc/rabbitmq/definitions.json:ro
     ports:
       - "5672:5672"
       - "15672:15672"
