@@ -36,4 +36,13 @@ public class AlertRulesController : ControllerBase
         var rule = await _service.CreateAsync(userId, request);
         return Ok(rule);
     }
+
+    [HttpDelete("{ruleId:guid}")]
+    public async Task<IActionResult> DeleteRule(Guid ruleId)
+    {
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            return Unauthorized();
+
+        return await _service.DeleteAsync(ruleId, userId) ? NoContent() : NotFound();
+    }
 }
