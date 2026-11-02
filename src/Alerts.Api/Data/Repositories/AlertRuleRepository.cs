@@ -1,4 +1,5 @@
 using Alerts.Api.Data.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Alerts.Api.Data.Repositories;
 
@@ -15,5 +16,13 @@ public class AlertRuleRepository
     {
         await _context.AlertRules.AddAsync(rule);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<IReadOnlyList<AlertRule>> GetByUserIdAsync(Guid userId)
+    {
+        return await _context.AlertRules
+            .AsNoTracking()
+            .Where(rule => rule.UserId == userId)
+            .ToListAsync();
     }
 }
