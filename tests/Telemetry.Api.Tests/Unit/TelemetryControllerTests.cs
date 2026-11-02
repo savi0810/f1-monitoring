@@ -57,7 +57,9 @@ public class TelemetryControllerTests
         var result = await new TelemetryController(_queryService, _importService)
             .ImportSession(11396, CancellationToken.None);
 
-        var accepted = Assert.IsType<AcceptedResult>(result.Result);
+        var accepted = Assert.IsType<AcceptedAtActionResult>(result.Result);
+        Assert.Equal(nameof(TelemetryController.GetImportStatus), accepted.ActionName);
+        Assert.Equal(11396, accepted.RouteValues!["sessionKey"]);
         Assert.Same(import, accepted.Value);
     }
 
