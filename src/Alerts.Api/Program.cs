@@ -1,3 +1,8 @@
+using Alerts.Api.Consuming;
+using Alerts.Api.Data;
+using Alerts.Api.Extensions;
+using Alerts.Api.Publishing;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +16,20 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+builder.Services.AddAlertsServices(builder.Configuration);
+builder.Services.AddRabbitMq(builder.Configuration);
+builder.Services.AddHostedService<AlertsEventConsumer>();
+builder.Services.AddHostedService<OutboxDispatcher>();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var database = scope.ServiceProvider.GetRequiredService<AppDbContext>().Database;
+    if (database.IsNpgsql())
+        database.Migrate();
+}
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -21,6 +38,7 @@ app.UseSerilogRequestLogging();
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Alerts.Api v1"));
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
