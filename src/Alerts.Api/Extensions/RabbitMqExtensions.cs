@@ -27,6 +27,18 @@ public static class RabbitMqExtensions
             return connection.CreateChannelAsync().GetAwaiter().GetResult();
         });
 
+        services.AddKeyedSingleton<IChannel>("alerts-publisher", CreatePublisherChannel);
+
         return services;
+    }
+
+    private static IChannel CreatePublisherChannel(IServiceProvider services, object? _)
+    {
+        var connection = services.GetRequiredService<IConnection>();
+        var options = new CreateChannelOptions(
+            publisherConfirmationsEnabled: true,
+            publisherConfirmationTrackingEnabled: true);
+
+        return connection.CreateChannelAsync(options).GetAwaiter().GetResult();
     }
 }
