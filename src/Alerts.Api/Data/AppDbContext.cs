@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
 
     public DbSet<AlertRule> AlertRules { get; set; }
     public DbSet<ProcessedEvent> ProcessedEvents { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
