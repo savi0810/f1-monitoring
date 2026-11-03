@@ -15,6 +15,7 @@ public static class AlertsExtensions
         services.AddScoped<IAlertRuleRepository, AlertRuleRepository>();
         services.AddScoped<IAlertRuleService, AlertRuleService>();
         services.AddScoped<LapRuleMatcher>();
+        services.AddScoped<LapEventProcessor>();
 
         return services;
     }
