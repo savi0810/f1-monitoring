@@ -11,7 +11,9 @@ public static class RabbitMqExtensions
     {
         services.AddSingleton(_ => new ConnectionFactory
         {
-            HostName = configuration["RabbitMq:Host"] ?? "localhost"
+            HostName = configuration["RabbitMq:Host"] ?? "localhost",
+            UserName = configuration["RabbitMq:UserName"] ?? "guest",
+            Password = configuration["RabbitMq:Password"] ?? "guest"
         });
 
         services.AddSingleton<IConnection>(sp =>

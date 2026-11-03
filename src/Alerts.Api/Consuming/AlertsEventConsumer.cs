@@ -58,6 +58,11 @@ public class AlertsEventConsumer : BackgroundService
             durable: true,
             exclusive: false,
             autoDelete: false,
+            arguments: new Dictionary<string, object?>
+            {
+                ["x-dead-letter-exchange"] = DeadLetterExchange,
+                ["x-dead-letter-routing-key"] = DeadLetterRoutingKey
+            },
             cancellationToken: stoppingToken);
 
         await _channel.QueueBindAsync(

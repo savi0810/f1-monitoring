@@ -53,6 +53,8 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=postgres-telemetry;Port=5432;Database=telemetrydb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       RabbitMq__Host: rabbitmq
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: F1Monitor.Auth
       Jwt__Audience: F1Monitor
@@ -91,6 +93,8 @@ services:
       Jwt__Issuer: F1Monitor.Auth
       Jwt__Audience: F1Monitor
       RabbitMq__Host: rabbitmq
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
     ports:
       - "5262:8080"
     depends_on:
@@ -112,9 +116,10 @@ services:
   rabbitmq:
     image: rabbitmq:4-management
     restart: unless-stopped
-    volumes:
-      - ./deploy/rabbitmq-config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-      - ./deploy/rabbitmq-config/definitions.json:/etc/rabbitmq/definitions.json:ro
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: /
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -133,6 +138,8 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       RabbitMq__Host: rabbitmq
+      RabbitMq__UserName: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
     ports:
       - "5301:8080"
     depends_on:
