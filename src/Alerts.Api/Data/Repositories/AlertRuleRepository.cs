@@ -26,6 +26,15 @@ public class AlertRuleRepository : IAlertRuleRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<AlertRule>> GetMatchingLapRulesAsync(int driverNumber, double lapTimeSeconds, CancellationToken cancellationToken = default)
+    {
+        return await _context.AlertRules
+            .AsNoTracking()
+            .Where(rule => rule.DriverNumber == driverNumber
+                && lapTimeSeconds < rule.LapTimeThresholdSeconds)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> DeleteAsync(Guid ruleId, Guid userId)
     {
         var deleted = await _context.AlertRules
