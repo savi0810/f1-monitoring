@@ -11,4 +11,11 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<AlertRule> AlertRules { get; set; }
+    public DbSet<ProcessedEvent> ProcessedEvents { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProcessedEvent>()
+            .HasKey(processedEvent => processedEvent.EventId);
+    }
 }
