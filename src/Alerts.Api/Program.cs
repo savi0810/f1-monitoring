@@ -1,6 +1,7 @@
 using Alerts.Api.Consuming;
 using Alerts.Api.Data;
 using Alerts.Api.Extensions;
+using Alerts.Api.Publishing;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -18,6 +19,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddAlertsServices(builder.Configuration);
 builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHostedService<AlertsEventConsumer>();
+builder.Services.AddHostedService<OutboxDispatcher>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
