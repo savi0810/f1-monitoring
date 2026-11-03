@@ -6,7 +6,7 @@
       "pattern": "^alerts\\.events$",
       "apply-to": "queues",
       "definition": {
-        "dead-letter-exchange": "alerts.dlx",
+        "dead-letter-exchange": "alerts.dead",
         "dead-letter-routing-key": "alerts.events.dead"
       },
       "priority": 10
