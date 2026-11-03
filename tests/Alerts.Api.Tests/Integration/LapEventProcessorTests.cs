@@ -47,4 +47,40 @@ public class LapEventProcessorTests
 
         Assert.Single(await context.OutboxMessages.ToListAsync());
     }
+    [Fact]
+    public async Task ProcessAsync_PitOutLap_DoesNotCreateOutboxMessage()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var context = new AppDbContext(options);
+        await context.Database.EnsureCreatedAsync();
+
+        context.AlertRules.Add(new AlertRule
+        {
+            UserId = Guid.NewGuid(),
+            DriverNumber = 1,
+            LapTimeThresholdSeconds = 90
+        });
+        await context.SaveChangesAsync();
+
+        var raceEvent = new RaceEvent(
+            Guid.NewGuid(),
+            EventTypes.LapCompleted,
+            123,
+            1,
+            DateTimeOffset.UtcNow,
+            EventSerializer.WritePayload(new LapCompletedPayload(1, 85, null, null, null, true)));
+
+        var matcher = new LapRuleMatcher(new AlertRuleRepository(context));
+        var processor = new LapEventProcessor(context, matcher);
+
+        await processor.ProcessAsync(raceEvent);
+
+        Assert.Empty(await context.OutboxMessages.ToListAsync());
+    }
 }
