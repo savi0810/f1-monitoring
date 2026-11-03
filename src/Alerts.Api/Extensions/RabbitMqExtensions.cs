@@ -1,3 +1,4 @@
+using Alerts.Api.Publishing;
 using RabbitMQ.Client;
 
 namespace Alerts.Api.Extensions;
@@ -28,6 +29,8 @@ public static class RabbitMqExtensions
         });
 
         services.AddKeyedSingleton<IChannel>("alerts-publisher", CreatePublisherChannel);
+        services.AddSingleton(sp =>
+            new AlertPublisher(sp.GetRequiredKeyedService<IChannel>("alerts-publisher")));
 
         return services;
     }
