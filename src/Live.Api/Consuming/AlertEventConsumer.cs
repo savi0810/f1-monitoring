@@ -14,16 +14,28 @@ public class AlertEventConsumer : BackgroundService
     private readonly IHubContext<LiveHub> _hub;
     private readonly ILogger<AlertEventConsumer> _logger;
 
-    public AlertEventConsumer(IChannel channel, IHubContext<LiveHub> hub, ILogger<AlertEventConsumer> logger)
+    public AlertEventConsumer([FromKeyedServices("alerts-consumer")] IChannel channel, IHubContext<LiveHub> hub, ILogger<AlertEventConsumer> logger)
     {
         _channel = channel;
         _hub = hub;
         _logger = logger;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        return Task.CompletedTask;
+        await _channel.QueueDeclareAsync(
+            queue: QueueNames.AlertTriggered,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+
+        await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
+
+        var consumer = new AsyncEventingBasicConsumer(_channel);
+        consumer.ReceivedAsync += (_, args) => HandleAsync(args, stoppingToken);
+
+        await _channel.BasicConsumeAsync(QueueNames.AlertTriggered, autoAck: false, consumer, stoppingToken);
     }
 
     private async Task HandleAsync(BasicDeliverEventArgs args, CancellationToken cancellationToken)
