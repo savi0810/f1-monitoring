@@ -18,6 +18,7 @@ public static class RedisExtensions
         });
 
         services.AddScoped<ILiveSnapshotRepository, LiveSnapshotRepository>();
+        services.AddScoped<ILiveSourceStateRepository, LiveSourceStateRepository>();
 
         return services;
     }
