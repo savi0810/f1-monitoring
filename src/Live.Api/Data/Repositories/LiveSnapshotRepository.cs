@@ -1,27 +1,29 @@
 using System.Text.Json;
 using Live.Api.Data.Models;
-using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace Live.Api.Data.Repositories;
 
 public class LiveSnapshotRepository : ILiveSnapshotRepository
 {
-    private readonly IDistributedCache _cache;
+    private readonly IDatabase _db;
 
-    public LiveSnapshotRepository(IDistributedCache cache)
+    public LiveSnapshotRepository(IConnectionMultiplexer redis)
     {
-        _cache = cache;
+        _db = redis.GetDatabase();
     }
 
     public async Task<LiveSnapshot?> GetAsync(int sessionKey, CancellationToken cancellationToken = default)
     {
-        var json = await _cache.GetStringAsync($"live:snapshot:{sessionKey}", cancellationToken);
-        return json is null ? null : JsonSerializer.Deserialize<LiveSnapshot>(json);
+        cancellationToken.ThrowIfCancellationRequested();
+        var json = await _db.StringGetAsync($"live:snapshot:v2:{sessionKey}");
+        return json.IsNull ? null : JsonSerializer.Deserialize<LiveSnapshot>(json.ToString());
     }
 
     public Task SaveAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var json = JsonSerializer.Serialize(snapshot);
-        return _cache.SetStringAsync($"live:snapshot:{snapshot.SessionKey}", json, cancellationToken);
+        return _db.StringSetAsync($"live:snapshot:v2:{snapshot.SessionKey}", json);
     }
 }

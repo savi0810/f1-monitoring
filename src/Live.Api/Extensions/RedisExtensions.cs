@@ -9,13 +9,12 @@ public static class RedisExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddStackExchangeRedisCache(options =>
-        {
-            var redisOptions = ConfigurationOptions.Parse(
-                configuration.GetConnectionString("Redis") ?? "localhost:6379");
-            redisOptions.Password = configuration["Redis:Password"];
-            options.ConfigurationOptions = redisOptions;
-        });
+        var redisOptions = ConfigurationOptions.Parse(
+            configuration.GetConnectionString("Redis") ?? "localhost:6379");
+        redisOptions.Password = configuration["Redis:Password"];
+
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(redisOptions));
 
         services.AddScoped<ILiveSnapshotRepository, LiveSnapshotRepository>();
         services.AddScoped<ILiveSourceStateRepository, LiveSourceStateRepository>();
