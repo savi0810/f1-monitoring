@@ -16,7 +16,7 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
     public async Task<LiveSnapshot?> GetAsync(int sessionKey, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var json = await _db.StringGetAsync($"live:snapshot:v2:{sessionKey}");
+        var json = await _db.StringGetAsync($"live:snapshot:json:{sessionKey}");
         return json.IsNull ? null : JsonSerializer.Deserialize<LiveSnapshot>(json.ToString());
     }
 
@@ -24,6 +24,6 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
         var json = JsonSerializer.Serialize(snapshot);
-        return _db.StringSetAsync($"live:snapshot:v2:{snapshot.SessionKey}", json);
+        return _db.StringSetAsync($"live:snapshot:json:{snapshot.SessionKey}", json);
     }
 }
