@@ -19,6 +19,7 @@ builder.Services.AddRedis(builder.Configuration);
 builder.Services.AddLiveServices();
 builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHostedService<LiveEventConsumer>();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -29,6 +30,7 @@ app.UseSerilogRequestLogging();
 app.MapOpenApi();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Live.Api v1"));
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
