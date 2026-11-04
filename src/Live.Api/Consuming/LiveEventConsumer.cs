@@ -1,5 +1,9 @@
+using System.Text;
+using System.Text.Json;
 using F1Monitor.Contracts;
+using Live.Api.Services;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Live.Api.Consuming;
 
@@ -66,5 +70,39 @@ public class LiveEventConsumer : BackgroundService
             exchange: ExchangeNames.F1Events,
             routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.TimingUpdated),
             cancellationToken: stoppingToken);
+
+        await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
+
+        var consumer = new AsyncEventingBasicConsumer(_channel);
+
+        consumer.ReceivedAsync += async (_, args) =>
+        {
+            try
+            {
+                var json = Encoding.UTF8.GetString(args.Body.Span);
+                var raceEvent = EventSerializer.Deserialize(json);
+
+                if (raceEvent.EventId == Guid.Empty || raceEvent.Type != EventTypes.TimingUpdated)
+                    throw new JsonException("Invalid timing event.");
+
+                using var scope = _scopeFactory.CreateScope();
+                var service = scope.ServiceProvider.GetRequiredService<TimingService>();
+                await service.ProcessAsync(raceEvent, stoppingToken);
+
+                await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogError(exception, "Invalid timing event.");
+                await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                _logger.LogError(exception, "Timing event processing failed.");
+                await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true, cancellationToken: stoppingToken);
+            }
+        };
+
+        await _channel.BasicConsumeAsync(QueueNames.LiveEvents, autoAck: false, consumer, stoppingToken);
     }
 }
