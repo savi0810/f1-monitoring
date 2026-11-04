@@ -20,13 +20,6 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
         return json.IsNull ? null : JsonSerializer.Deserialize<LiveSnapshot>(json.ToString());
     }
 
-    public Task SaveAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var json = JsonSerializer.Serialize(snapshot);
-        return _db.StringSetAsync($"live:snapshot:json:{snapshot.SessionKey}", json);
-    }
-
     public async Task<LiveSnapshot> SaveIfNewerAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default)
     {
         var key = $"live:snapshot:json:{snapshot.SessionKey}";
