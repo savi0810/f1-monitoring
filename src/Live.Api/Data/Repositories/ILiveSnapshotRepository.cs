@@ -8,5 +8,5 @@ public interface ILiveSnapshotRepository
 
     Task SaveAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default);
 
-    Task<(LiveSnapshot Snapshot, bool Accepted)> SaveIfNewerAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default);
+    Task<LiveSnapshot> SaveIfNewerAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default);
 }

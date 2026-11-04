@@ -27,7 +27,7 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
         return _db.StringSetAsync($"live:snapshot:json:{snapshot.SessionKey}", json);
     }
 
-    public async Task<(LiveSnapshot Snapshot, bool Accepted)> SaveIfNewerAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default)
+    public async Task<LiveSnapshot> SaveIfNewerAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default)
     {
         var key = $"live:snapshot:json:{snapshot.SessionKey}";
         var json = JsonSerializer.Serialize(snapshot);
@@ -43,7 +43,7 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
                     ?? throw new JsonException("Stored snapshot is empty.");
 
                 if (snapshot.Version <= current.Version)
-                    return (current, false);
+                    return current;
             }
 
             var transaction = _db.CreateTransaction();
@@ -53,7 +53,7 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
             _ = transaction.StringSetAsync(key, json);
 
             if (await transaction.ExecuteAsync())
-                return (snapshot, true);
+                return snapshot;
         }
     }
 }
