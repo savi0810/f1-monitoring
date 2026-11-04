@@ -1,3 +1,4 @@
+using Live.Api.Consuming;
 using Live.Api.Extensions;
 using Serilog;
 
@@ -15,6 +16,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddRedis(builder.Configuration);
 builder.Services.AddLiveServices();
 builder.Services.AddRabbitMq(builder.Configuration);
+builder.Services.AddHostedService<LiveEventConsumer>();
 
 var app = builder.Build();
 
