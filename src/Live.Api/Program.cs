@@ -13,6 +13,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddRedis(builder.Configuration);
+builder.Services.AddLiveServices();
 
 var app = builder.Build();
 
