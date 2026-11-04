@@ -1,4 +1,4 @@
-namespace Live.Api.Models;
+namespace Live.Api.Data.Models;
 
 public class LiveDriver
 {
