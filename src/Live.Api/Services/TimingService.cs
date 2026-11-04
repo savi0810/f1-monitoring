@@ -1,6 +1,8 @@
 using F1Monitor.Contracts;
+using Live.Api.Data.DTOs;
 using Live.Api.Data.Models;
 using Live.Api.Data.Repositories;
+using Live.Api.Mapping;
 
 namespace Live.Api.Services;
 
@@ -11,6 +13,12 @@ public class TimingService
     public TimingService(ILiveSnapshotRepository repository)
     {
         _repository = repository;
+    }
+
+    public async Task<LiveSnapshotDto?> GetSnapshotAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        var snapshot = await _repository.GetAsync(sessionKey, cancellationToken);
+        return snapshot is null ? null : LiveSnapshotMapper.ToDto(snapshot);
     }
 
     public async Task ProcessAsync(RaceEvent raceEvent, CancellationToken cancellationToken = default)
