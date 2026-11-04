@@ -123,8 +123,13 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Redis: redis:6379
+      Redis__Password: ${REDIS_PASSWORD}
     ports:
       - "5052:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:4-management
