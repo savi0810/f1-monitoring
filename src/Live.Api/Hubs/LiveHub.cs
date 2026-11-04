@@ -11,4 +11,13 @@ public class LiveHub : Hub
     {
         _timingService = timingService;
     }
+
+    public async Task SubscribeSession(int sessionKey)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"session:{sessionKey}");
+
+        var snapshot = await _timingService.GetSnapshotAsync(sessionKey, Context.ConnectionAborted);
+        if (snapshot is not null)
+            await Clients.Caller.SendAsync("TimingUpdated", snapshot, Context.ConnectionAborted);
+    }
 }
