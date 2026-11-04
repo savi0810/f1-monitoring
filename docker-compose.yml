@@ -128,6 +128,9 @@ services:
       RabbitMq__Host: rabbitmq
       RabbitMq__UserName: ${RABBITMQ_USER}
       RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: F1Monitor.Auth
+      Jwt__Audience: F1Monitor
     ports:
       - "5052:8080"
     depends_on:
