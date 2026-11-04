@@ -14,6 +14,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddRedis(builder.Configuration);
 builder.Services.AddLiveServices();
+builder.Services.AddRabbitMq(builder.Configuration);
 
 var app = builder.Build();
 
