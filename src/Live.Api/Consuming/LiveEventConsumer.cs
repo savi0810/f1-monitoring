@@ -91,7 +91,7 @@ public class LiveEventConsumer : BackgroundService
                 if (args.RoutingKey == RoutingKeys.For(RoutingKeys.Live, EventTypes.SourceStatus))
                 {
                     var status = EventSerializer.Deserialize<LiveSourceStatus>(json);
-                    if (status.ReportedAt == default || status.SessionKey is <= 0)
+                    if (status.ReportedAt == default || status.ReportedAt > DateTimeOffset.UtcNow.AddSeconds(30) || status.SessionKey is <= 0)
                         throw new JsonException("Invalid source status.");
 
                     var service = scope.ServiceProvider.GetRequiredService<LiveSourceService>();
