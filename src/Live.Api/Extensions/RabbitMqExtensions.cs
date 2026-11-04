@@ -29,6 +29,13 @@ public static class RabbitMqExtensions
             return connection.CreateChannelAsync().GetAwaiter().GetResult();
         });
 
+        services.AddKeyedSingleton<IChannel>("alerts-consumer", (sp, _) =>
+        {
+            var connection = sp.GetRequiredService<IConnection>();
+
+            return connection.CreateChannelAsync().GetAwaiter().GetResult();
+        });
+
         return services;
     }
 }
