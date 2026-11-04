@@ -30,8 +30,12 @@ public class LiveSourceService
         return new CurrentLiveDto(isConnected, snapshot);
     }
 
-    public Task ProcessAsync(LiveSourceStatus status, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(LiveSourceStatus status, CancellationToken cancellationToken = default)
     {
+        var current = await _repository.GetAsync(cancellationToken);
+        if (current is not null && status.ReportedAt <= current.ReportedAt)
+            return;
+
         var state = new LiveSourceState
         {
             IsConnected = status.IsConnected,
@@ -39,6 +43,6 @@ public class LiveSourceService
             ReportedAt = status.ReportedAt
         };
 
-        return _repository.SaveAsync(state, cancellationToken);
+        await _repository.SaveAsync(state, cancellationToken);
     }
 }
