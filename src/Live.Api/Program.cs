@@ -1,5 +1,6 @@
 using Live.Api.Consuming;
 using Live.Api.Extensions;
+using Live.Api.Hubs;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ builder.Host.UseSerilog((context, configuration) =>
         .WriteTo.Console());
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
@@ -30,6 +32,7 @@ app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Live.Ap
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<LiveHub>("/livehub");
 app.MapHealthChecks("/health");
 
 app.Run();
