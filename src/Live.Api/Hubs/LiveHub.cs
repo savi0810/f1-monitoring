@@ -1,8 +1,10 @@
 using Live.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Live.Api.Hubs;
 
+[Authorize]
 public class LiveHub : Hub
 {
     private readonly TimingService _timingService;
