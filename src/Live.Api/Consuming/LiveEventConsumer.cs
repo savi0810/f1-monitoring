@@ -71,6 +71,12 @@ public class LiveEventConsumer : BackgroundService
             routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.TimingUpdated),
             cancellationToken: stoppingToken);
 
+        await _channel.QueueBindAsync(
+            queue: QueueNames.LiveEvents,
+            exchange: ExchangeNames.F1Events,
+            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.SourceStatus),
+            cancellationToken: stoppingToken);
+
         await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -80,14 +86,26 @@ public class LiveEventConsumer : BackgroundService
             try
             {
                 var json = Encoding.UTF8.GetString(args.Body.Span);
-                var raceEvent = EventSerializer.Deserialize(json);
-
-                if (raceEvent.EventId == Guid.Empty || raceEvent.Type != EventTypes.TimingUpdated)
-                    throw new JsonException("Invalid timing event.");
-
                 using var scope = _scopeFactory.CreateScope();
-                var service = scope.ServiceProvider.GetRequiredService<TimingService>();
-                await service.ProcessAsync(raceEvent, stoppingToken);
+
+                if (args.RoutingKey == RoutingKeys.For(RoutingKeys.Live, EventTypes.SourceStatus))
+                {
+                    var status = EventSerializer.Deserialize<LiveSourceStatus>(json);
+                    if (status.ReportedAt == default || status.SessionKey is <= 0)
+                        throw new JsonException("Invalid source status.");
+
+                    var service = scope.ServiceProvider.GetRequiredService<LiveSourceService>();
+                    await service.ProcessAsync(status, stoppingToken);
+                }
+                else
+                {
+                    var raceEvent = EventSerializer.Deserialize(json);
+                    if (raceEvent.EventId == Guid.Empty || raceEvent.Type != EventTypes.TimingUpdated)
+                        throw new JsonException("Invalid timing event.");
+
+                    var service = scope.ServiceProvider.GetRequiredService<TimingService>();
+                    await service.ProcessAsync(raceEvent, stoppingToken);
+                }
 
                 await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
             }
