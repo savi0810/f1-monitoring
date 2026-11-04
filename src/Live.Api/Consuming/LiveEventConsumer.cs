@@ -1,3 +1,4 @@
+using F1Monitor.Contracts;
 using RabbitMQ.Client;
 
 namespace Live.Api.Consuming;
@@ -15,8 +16,26 @@ public class LiveEventConsumer : BackgroundService
         _logger = logger;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        return Task.CompletedTask;
+        await _channel.ExchangeDeclareAsync(
+            exchange: ExchangeNames.F1Events,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+
+        await _channel.QueueDeclareAsync(
+            queue: QueueNames.LiveEvents,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+
+        await _channel.QueueBindAsync(
+            queue: QueueNames.LiveEvents,
+            exchange: ExchangeNames.F1Events,
+            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.TimingUpdated),
+            cancellationToken: stoppingToken);
     }
 }
