@@ -1,3 +1,4 @@
+using Live.Api.Data.Repositories;
 using StackExchange.Redis;
 
 namespace Live.Api.Extensions;
@@ -15,6 +16,8 @@ public static class RedisExtensions
             redisOptions.Password = configuration["Redis:Password"];
             options.ConfigurationOptions = redisOptions;
         });
+
+        services.AddScoped<ILiveSnapshotRepository, LiveSnapshotRepository>();
 
         return services;
     }
