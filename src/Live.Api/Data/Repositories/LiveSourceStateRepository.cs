@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Live.Api.Data.Models;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -12,13 +13,15 @@ public class LiveSourceStateRepository : ILiveSourceStateRepository
         _cache = cache;
     }
 
-    public Task<LiveSourceState?> GetAsync(CancellationToken cancellationToken = default)
+    public async Task<LiveSourceState?> GetAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var json = await _cache.GetStringAsync("live:source", cancellationToken);
+        return json is null ? null : JsonSerializer.Deserialize<LiveSourceState>(json);
     }
 
     public Task SaveAsync(LiveSourceState state, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var json = JsonSerializer.Serialize(state);
+        return _cache.SetStringAsync("live:source", json, cancellationToken);
     }
 }
