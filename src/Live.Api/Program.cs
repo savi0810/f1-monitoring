@@ -19,6 +19,7 @@ builder.Services.AddRedis(builder.Configuration);
 builder.Services.AddLiveServices();
 builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHostedService<LiveEventConsumer>();
+builder.Services.AddHostedService<AlertEventConsumer>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();
