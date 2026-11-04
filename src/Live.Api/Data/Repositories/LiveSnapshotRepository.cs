@@ -26,4 +26,34 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
         var json = JsonSerializer.Serialize(snapshot);
         return _db.StringSetAsync($"live:snapshot:json:{snapshot.SessionKey}", json);
     }
+
+    public async Task<(LiveSnapshot Snapshot, bool Accepted)> SaveIfNewerAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default)
+    {
+        var key = $"live:snapshot:json:{snapshot.SessionKey}";
+        var json = JsonSerializer.Serialize(snapshot);
+
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var currentJson = await _db.StringGetAsync(key);
+            if (!currentJson.IsNull)
+            {
+                var current = JsonSerializer.Deserialize<LiveSnapshot>(currentJson.ToString())
+                    ?? throw new JsonException("Stored snapshot is empty.");
+
+                if (snapshot.Version <= current.Version)
+                    return (current, false);
+            }
+
+            var transaction = _db.CreateTransaction();
+            transaction.AddCondition(currentJson.IsNull
+                ? Condition.KeyNotExists(key)
+                : Condition.StringEqual(key, currentJson));
+            _ = transaction.StringSetAsync(key, json);
+
+            if (await transaction.ExecuteAsync())
+                return (snapshot, true);
+        }
+    }
 }
