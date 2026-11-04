@@ -28,30 +28,25 @@ public class TimingService
     public async Task ProcessAsync(RaceEvent raceEvent, CancellationToken cancellationToken = default)
     {
         var payload = EventSerializer.ReadPayload<TimingUpdatedPayload>(raceEvent);
-        var snapshot = await _repository.GetAsync(raceEvent.SessionKey, cancellationToken);
-
-        if (snapshot is not null && payload.Version < snapshot.Version)
-            return;
-
-        if (snapshot is null || payload.Version > snapshot.Version)
+        var candidate = new LiveSnapshot
         {
-            snapshot = new LiveSnapshot
+            SessionKey = raceEvent.SessionKey,
+            Version = payload.Version,
+            UpdatedAt = raceEvent.OccurredAt ?? DateTimeOffset.UtcNow,
+            Drivers = payload.Drivers.Select(driver => new LiveDriver
             {
-                SessionKey = raceEvent.SessionKey,
-                Version = payload.Version,
-                UpdatedAt = raceEvent.OccurredAt ?? DateTimeOffset.UtcNow,
-                Drivers = payload.Drivers.Select(driver => new LiveDriver
-                {
-                    DriverNumber = driver.DriverNumber,
-                    Position = driver.Position,
-                    LapNumber = driver.LapNumber,
-                    LastLapSeconds = driver.LastLapSeconds,
-                    GapToLeader = driver.GapToLeader
-                }).ToList()
-            };
+                DriverNumber = driver.DriverNumber,
+                Position = driver.Position,
+                LapNumber = driver.LapNumber,
+                LastLapSeconds = driver.LastLapSeconds,
+                GapToLeader = driver.GapToLeader
+            }).ToList()
+        };
 
-            await _repository.SaveAsync(snapshot, cancellationToken);
-        }
+        var snapshot = await _repository.SaveIfNewerAsync(candidate, cancellationToken);
+
+        if (payload.Version < snapshot.Version)
+            return;
 
         await _hub.Clients.Group($"session:{snapshot.SessionKey}")
             .SendAsync("TimingUpdated", LiveSnapshotMapper.ToDto(snapshot), cancellationToken);
