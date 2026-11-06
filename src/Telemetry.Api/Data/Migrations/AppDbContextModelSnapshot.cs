@@ -62,6 +62,19 @@ namespace Telemetry.Api.Data.Migrations
                     b.ToTable("Laps");
                 });
 
+            modelBuilder.Entity("Telemetry.Api.Data.Models.Meeting", b =>
+                {
+                    b.Property<int>("MeetingKey")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MeetingName")
+                        .HasColumnType("text");
+
+                    b.HasKey("MeetingKey");
+
+                    b.ToTable("Meetings");
+                });
+
             modelBuilder.Entity("Telemetry.Api.Data.Models.Session", b =>
                 {
                     b.Property<int>("SessionKey")
@@ -112,9 +125,20 @@ namespace Telemetry.Api.Data.Migrations
 
                     b.HasIndex("DateStart");
 
+                    b.HasIndex("MeetingKey");
+
                     b.HasIndex("Year", "SessionType");
 
                     b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("Telemetry.Api.Data.Models.Session", b =>
+                {
+                    b.HasOne("Telemetry.Api.Data.Models.Meeting", null)
+                        .WithMany()
+                        .HasForeignKey("MeetingKey")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
