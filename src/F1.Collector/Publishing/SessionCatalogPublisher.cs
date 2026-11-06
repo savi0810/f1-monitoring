@@ -41,13 +41,21 @@ public class SessionCatalogPublisher : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        try
+        while (!stoppingToken.IsCancellationRequested)
         {
-            await PublishCatalogAsync(stoppingToken);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogError(ex, "Sessions catalog was not published.");
+            var delay = TimeSpan.FromHours(12);
+
+            try
+            {
+                await PublishCatalogAsync(stoppingToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Sessions catalog was not published.");
+                delay = TimeSpan.FromMinutes(15);
+            }
+
+            await Task.Delay(delay, stoppingToken);
         }
     }
 }
