@@ -235,6 +235,27 @@ public class SessionRepositoryTests : IDisposable
     };
 
     [Fact]
+    public async Task GetCatalogAsync_GroupsSessionsByYearAndMeeting()
+    {
+        var earlier = NewSession(11730, "Qualifying");
+        earlier.DateStart = earlier.DateStart.AddDays(-1);
+        earlier.DateEnd = earlier.DateEnd.AddDays(-1);
+
+        var repository = new SessionRepository(_db.Create());
+        await repository.UpsertSessionAsync(NewSession(11731));
+        await repository.UpsertSessionAsync(earlier);
+
+        var catalog = await repository.GetCatalogAsync(null, null);
+
+        var year = Assert.Single(catalog);
+        Assert.Equal(2026, year.Year);
+        var meeting = Assert.Single(year.Meetings);
+        Assert.Equal(1308, meeting.MeetingKey);
+        Assert.Equal("Bahrain Grand Prix", meeting.MeetingName);
+        Assert.Equal([11730, 11731], meeting.Sessions.Select(s => s.SessionKey));
+    }
+
+    [Fact]
     public async Task GetSessionsAsync_ReturnsSessionsWithLapCount()
     {
         await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
