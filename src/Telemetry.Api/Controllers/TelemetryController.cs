@@ -19,9 +19,9 @@ public class TelemetryController : ControllerBase
     }
 
     [HttpGet("sessions")]
-    public async Task<ActionResult<IReadOnlyList<SessionDto>>> GetSessions([FromQuery] string? type, [FromQuery] int? year)
+    public async Task<ActionResult<IReadOnlyList<SessionCatalogYearDto>>> GetSessions([FromQuery] string? type, [FromQuery] int? year)
     {
-        return Ok(await _telemetryQueryService.GetSessionsAsync(type, year));
+        return Ok(await _telemetryQueryService.GetCatalogAsync(type, year));
     }
 
     [HttpGet("sessions/{sessionKey:int}/laps")]
