@@ -96,6 +96,56 @@ public class SessionRepository : ISessionRepository
         return updated > 0;
     }
 
+    public async Task<IReadOnlyList<SessionCatalogYearDto>> GetCatalogAsync(string? type, int? year)
+    {
+        var query = _context.Sessions.AsNoTracking();
+
+        if (type is not null)
+            query = query.Where(s => s.SessionType == type);
+
+        if (year is not null)
+            query = query.Where(s => s.Year == year);
+
+        var entries = await query
+            .Select(s => new
+            {
+                s.Meeting.MeetingName,
+                Session = new SessionDto(
+                    s.SessionKey,
+                    s.MeetingKey,
+                    s.Year,
+                    s.SessionType,
+                    s.SessionName,
+                    s.CircuitShortName,
+                    s.CountryName,
+                    s.DateStart,
+                    s.DateEnd,
+                    s.IsCancelled,
+                    _context.Laps.Count(l => l.SessionKey == s.SessionKey))
+            })
+            .ToListAsync();
+
+        return entries
+            .GroupBy(e => e.Session.Year)
+            .OrderByDescending(yearGroup => yearGroup.Key)
+            .Select(yearGroup => new SessionCatalogYearDto(
+                yearGroup.Key,
+                yearGroup
+                    .GroupBy(e => e.Session.MeetingKey)
+                    .OrderByDescending(meetingGroup => meetingGroup.Min(e => e.Session.DateStart))
+                    .ThenBy(meetingGroup => meetingGroup.Key)
+                    .Select(meetingGroup => new SessionCatalogMeetingDto(
+                        meetingGroup.Key,
+                        meetingGroup.First().MeetingName,
+                        meetingGroup
+                            .Select(e => e.Session)
+                            .OrderBy(s => s.DateStart)
+                            .ThenBy(s => s.SessionKey)
+                            .ToList()))
+                    .ToList()))
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year)
     {
         var query = _context.Sessions.AsNoTracking();
