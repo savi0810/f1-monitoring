@@ -39,7 +39,7 @@ public class SessionCatalogConsumerTests : IDisposable
     public async Task HandleSessionAvailableAsync_StoresSession()
     {
         var available = new SessionAvailable(
-            11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain",
+            11731, 1308, "Bahrain Grand Prix", 2026, "Race", "Race", "Kuala Lumpur", "Bahrain",
             new DateTimeOffset(2026, 10, 4, 7, 0, 0, TimeSpan.Zero),
             new DateTimeOffset(2026, 10, 4, 9, 0, 0, TimeSpan.Zero),
             false);
