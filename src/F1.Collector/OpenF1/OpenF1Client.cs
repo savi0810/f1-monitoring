@@ -14,6 +14,23 @@ public class OpenF1Client
         _rateLimiter = rateLimiter;
     }
 
+    public async Task<IReadOnlyList<OpenF1Driver>> GetDriversAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var drivers = await _httpClient.GetFromJsonAsync<List<OpenF1Driver>>(
+                $"drivers?session_key={sessionKey}", cancellationToken);
+
+            return drivers ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
+    }
+
     public async Task<IReadOnlyList<OpenF1Lap>> GetLapsAsync(int sessionKey, CancellationToken cancellationToken = default)
     {
         await _rateLimiter.WaitAsync(cancellationToken);
