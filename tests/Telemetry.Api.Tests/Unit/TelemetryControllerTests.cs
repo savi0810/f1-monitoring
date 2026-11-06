@@ -13,18 +13,24 @@ public class TelemetryControllerTests
     private readonly ISessionImportService _importService = Substitute.For<ISessionImportService>();
 
     [Fact]
-    public async Task GetSessions_ReturnsSessionsFromSessionRepository()
+    public async Task GetSessions_ReturnsGroupedCatalog()
     {
-        IReadOnlyList<SessionDto> sessions =
+        IReadOnlyList<SessionCatalogYearDto> catalog =
         [
-            new SessionDto(11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, false, 1145)
+            new SessionCatalogYearDto(2026,
+            [
+                new SessionCatalogMeetingDto(1308, "Bahrain Grand Prix",
+                [
+                    new SessionDto(11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, false, 1145)
+                ])
+            ])
         ];
-        _queryService.GetSessionsAsync("Race", 2026).Returns(sessions);
+        _queryService.GetCatalogAsync("Race", 2026).Returns(catalog);
 
         var result = await new TelemetryController(_queryService, _importService).GetSessions("Race", 2026);
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Same(sessions, ok.Value);
+        Assert.Same(catalog, ok.Value);
     }
 
     [Fact]
