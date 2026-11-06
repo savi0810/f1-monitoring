@@ -16,8 +16,19 @@ public class AppDbContext : DbContext
 
     public DbSet<Meeting> Meetings { get; set; }
 
+    public DbSet<SessionDriver> SessionDrivers { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<SessionDriver>()
+            .HasKey(d => new { d.SessionKey, d.DriverNumber });
+
+        modelBuilder.Entity<SessionDriver>()
+            .HasOne<Session>()
+            .WithMany()
+            .HasForeignKey(d => d.SessionKey)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<Meeting>()
             .HasKey(m => m.MeetingKey);
 
