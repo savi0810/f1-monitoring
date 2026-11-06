@@ -68,4 +68,21 @@ public class OpenF1Client
             return [];
         }
     }
+
+    public async Task<IReadOnlyList<OpenF1Meeting>> GetMeetingsAsync(int year, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var meetings = await _httpClient.GetFromJsonAsync<List<OpenF1Meeting>>(
+                $"meetings?year={year}", cancellationToken);
+
+            return meetings ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
+    }
 }
