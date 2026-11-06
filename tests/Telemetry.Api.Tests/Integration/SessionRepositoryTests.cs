@@ -10,6 +10,13 @@ public class SessionRepositoryTests : IDisposable
 {
     private readonly SqliteDb<AppDbContext> _db = new();
 
+    public SessionRepositoryTests()
+    {
+        using var context = _db.Create();
+        context.Meetings.Add(new Meeting { MeetingKey = 1308, MeetingName = "Bahrain Grand Prix" });
+        context.SaveChanges();
+    }
+
     public void Dispose() => _db.Dispose();
 
     private static Session NewSession(int sessionKey = 11731, string sessionName = "Race") => new()

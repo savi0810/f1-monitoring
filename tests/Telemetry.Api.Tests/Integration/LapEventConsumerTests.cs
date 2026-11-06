@@ -50,6 +50,7 @@ public class LapEventConsumerTests : IDisposable
     public async Task HandleRaceEventAsync_SessionImportFinished_MarksImportCompleted()
     {
         await using var context = _db.Create();
+        await new MeetingRepository(context).UpsertMeetingAsync(new Meeting { MeetingKey = 1, MeetingName = "Bahrain Grand Prix" });
         var repository = new SessionRepository(context);
         var importId = Guid.NewGuid();
         await repository.UpsertSessionAsync(new Session
@@ -84,6 +85,7 @@ public class LapEventConsumerTests : IDisposable
     public async Task HandleRaceEventAsync_SessionImportFinishedWithError_MarksImportFailed()
     {
         await using var context = _db.Create();
+        await new MeetingRepository(context).UpsertMeetingAsync(new Meeting { MeetingKey = 1, MeetingName = "Bahrain Grand Prix" });
         var repository = new SessionRepository(context);
         var importId = Guid.NewGuid();
         const string error = "OpenF1 request failed";
