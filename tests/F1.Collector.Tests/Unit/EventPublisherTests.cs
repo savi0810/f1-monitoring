@@ -80,12 +80,12 @@ public class EventPublisherTests
         var sessions = new[]
         {
             new SessionAvailable(
-                11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain",
+                11731, 1308, "Bahrain Grand Prix", 2026, "Race", "Race", "Kuala Lumpur", "Bahrain",
                 DateTimeOffset.Parse("2026-10-04T07:00:00+00:00"),
                 DateTimeOffset.Parse("2026-10-04T09:00:00+00:00"),
                 false),
             new SessionAvailable(
-                11730, 1308, 2026, "Qualifying", "Qualifying", "Kuala Lumpur", "Bahrain",
+                11730, 1308, "Bahrain Grand Prix", 2026, "Qualifying", "Qualifying", "Kuala Lumpur", "Bahrain",
                 DateTimeOffset.Parse("2026-10-03T08:00:00+00:00"),
                 DateTimeOffset.Parse("2026-10-03T09:00:00+00:00"),
                 false)
