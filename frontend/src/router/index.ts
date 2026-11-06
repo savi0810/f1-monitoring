@@ -4,7 +4,17 @@ import { hasValidToken } from '@/features/auth/tokenStorage'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', name: 'home', component: () => import('@/pages/HomePage.vue'), meta: { requiresAuth: true } },
+    { path: '/', name: 'home', redirect: { name: 'sessions' } },
+    { path: '/live', name: 'live', component: () => import('@/pages/LivePage.vue'), meta: { requiresAuth: true } },
+    {
+      path: '/sessions',
+      component: () => import('@/pages/PastRacesPage.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        { path: '', name: 'sessions' },
+        { path: ':sessionKey', name: 'session', component: () => import('@/features/telemetry/components/SessionDetails.vue') },
+      ],
+    },
     { path: '/login', name: 'login', component: () => import('@/pages/LoginPage/LoginPage.vue') },
     { path: '/register', name: 'register', component: () => import('@/pages/RegisterPage/RegisterPage.vue') },
   ],
