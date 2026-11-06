@@ -28,9 +28,13 @@ public class SessionCatalogPublisher : BackgroundService
         for (var year = FirstYear; year <= DateTime.UtcNow.Year; year++)
         {
             var sessions = await _openF1Client.GetSessionsAsync(year, cancellationToken);
+            var meetings = await _openF1Client.GetMeetingsAsync(year, cancellationToken);
+            var meetingsByKey = meetings.ToDictionary(meeting => meeting.MeetingKey);
 
             await _eventPublisher.PublishSessionsAsync(
-                sessions.Where(session => !session.IsCancelled).Select(SessionAvailableMapper.Map),
+                sessions.Where(session => !session.IsCancelled)
+                    .Select(session => SessionAvailableMapper.Map(
+                        session, meetingsByKey.GetValueOrDefault(session.MeetingKey))),
                 cancellationToken);
         }
     }
