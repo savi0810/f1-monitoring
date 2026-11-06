@@ -14,10 +14,13 @@ public class SessionAvailableMapperTests
             DateTimeOffset.Parse("2026-10-04T09:00:00+00:00"),
             false);
 
-        var available = SessionAvailableMapper.Map(session);
+        var meeting = new OpenF1Meeting(1308, "Bahrain Grand Prix");
+
+        var available = SessionAvailableMapper.Map(session, meeting);
 
         Assert.Equal(11731, available.SessionKey);
         Assert.Equal(1308, available.MeetingKey);
+        Assert.Equal("Bahrain Grand Prix", available.MeetingName);
         Assert.Equal(2026, available.Year);
         Assert.Equal("Race", available.SessionType);
         Assert.Equal("Race", available.SessionName);
