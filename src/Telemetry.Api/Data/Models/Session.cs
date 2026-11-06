@@ -6,6 +6,7 @@ public class Session
 {
     public int SessionKey { get; set; }
     public int MeetingKey { get; set; }
+    public Meeting Meeting { get; set; } = null!;
     public int Year { get; set; }
     public string SessionType { get; set; } = string.Empty;
     public string SessionName { get; set; } = string.Empty;

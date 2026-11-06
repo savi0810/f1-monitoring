@@ -39,7 +39,7 @@ public class AppDbContext : DbContext
             .ValueGeneratedNever();
 
         modelBuilder.Entity<Session>()
-            .HasOne<Meeting>()
+            .HasOne(s => s.Meeting)
             .WithMany()
             .HasForeignKey(s => s.MeetingKey)
             .OnDelete(DeleteBehavior.Restrict);
