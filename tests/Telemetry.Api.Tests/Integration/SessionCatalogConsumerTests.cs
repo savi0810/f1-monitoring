@@ -47,8 +47,13 @@ public class SessionCatalogConsumerTests : IDisposable
 
         await CreateConsumer().HandleSessionAvailableAsync(available);
 
+        var meeting = Assert.Single(_db.Create().Meetings);
+        Assert.Equal(1308, meeting.MeetingKey);
+        Assert.Equal("Bahrain Grand Prix", meeting.MeetingName);
+
         var stored = Assert.Single(_db.Create().Sessions);
         Assert.Equal(11731, stored.SessionKey);
+        Assert.Equal(1308, stored.MeetingKey);
         Assert.Equal("Race", stored.SessionType);
         Assert.Equal("Kuala Lumpur", stored.CircuitShortName);
     }
