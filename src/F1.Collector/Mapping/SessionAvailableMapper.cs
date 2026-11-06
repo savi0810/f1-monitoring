@@ -5,9 +5,10 @@ namespace F1.Collector.Mapping;
 
 public static class SessionAvailableMapper
 {
-    public static SessionAvailable Map(OpenF1Session session) => new(
+    public static SessionAvailable Map(OpenF1Session session, OpenF1Meeting? meeting) => new(
         session.SessionKey,
         session.MeetingKey,
+        meeting?.MeetingName,
         session.Year,
         session.SessionType,
         session.SessionName,
