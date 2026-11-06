@@ -14,6 +14,9 @@ public class TelemetryQueryService : ITelemetryQueryService
         _sessionRepository = sessionRepository;
     }
 
+    public Task<IReadOnlyList<SessionCatalogYearDto>> GetCatalogAsync(string? type, int? year) =>
+        _sessionRepository.GetCatalogAsync(type, year);
+
     public Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year) =>
         _sessionRepository.GetSessionsAsync(type, year);
 
