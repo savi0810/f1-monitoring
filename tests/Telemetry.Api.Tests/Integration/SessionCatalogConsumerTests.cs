@@ -19,6 +19,7 @@ public class SessionCatalogConsumerTests : IDisposable
     {
         var services = new ServiceCollection();
         services.AddScoped(_ => _db.Create());
+        services.AddScoped<IMeetingRepository, MeetingRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         _provider = services.BuildServiceProvider();
     }
