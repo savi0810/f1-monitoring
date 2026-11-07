@@ -12,6 +12,17 @@ public class SessionDriverRepository : ISessionDriverRepository
         _context = context;
     }
 
+    public async Task<IReadOnlyList<SessionDriver>> GetBySessionKeyAsync(int sessionKey)
+    {
+        return await _context.SessionDrivers
+            .AsNoTracking()
+            .Where(driver => driver.SessionKey == sessionKey)
+            .OrderBy(driver => driver.Position == null)
+            .ThenBy(driver => driver.Position)
+            .ThenBy(driver => driver.DriverNumber)
+            .ToListAsync();
+    }
+
     public async Task UpsertAsync(SessionDriver driver)
     {
         await _context.Database.ExecuteSqlInterpolatedAsync($"""
