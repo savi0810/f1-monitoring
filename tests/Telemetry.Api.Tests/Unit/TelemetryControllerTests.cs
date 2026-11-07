@@ -13,6 +13,37 @@ public class TelemetryControllerTests
     private readonly ISessionImportService _importService = Substitute.For<ISessionImportService>();
 
     [Fact]
+    public async Task GetSessionResults_KnownSession_ReturnsResults()
+    {
+        IReadOnlyList<SessionResultDto> results =
+        [
+            new(1, "Max Verstappen", "Red Bull Racing", 1, 57,
+                new RaceResultDto(5400.123, 0, null), null, null,
+                false, false, false, [])
+        ];
+        _queryService.SessionExistsAsync(11396).Returns(true);
+        _queryService.GetSessionResultsAsync(11396).Returns(results);
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .GetSessionResults(11396);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Same(results, ok.Value);
+    }
+
+    [Fact]
+    public async Task GetSessionResults_UnknownSession_ReturnsNotFound()
+    {
+        _queryService.SessionExistsAsync(1).Returns(false);
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .GetSessionResults(1);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+        await _queryService.DidNotReceive().GetSessionResultsAsync(1);
+    }
+
+    [Fact]
     public async Task GetSessions_ReturnsGroupedCatalog()
     {
         IReadOnlyList<SessionCatalogYearDto> catalog =
