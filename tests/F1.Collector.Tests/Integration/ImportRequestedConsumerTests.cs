@@ -14,6 +14,41 @@ namespace F1.Collector.Tests.Integration;
 public class ImportRequestedConsumerTests
 {
     [Fact]
+    public async Task HandleImportRequestedAsync_PublishesSessionDriver()
+    {
+        const string sessionJson = """
+        [{"session_key":11396,"session_type":"Race","session_name":"Race","date_start":"2026-10-25T20:00:00+00:00","date_end":"2026-10-25T22:00:00+00:00","meeting_key":1297,"year":2026,"is_cancelled":false}]
+        """;
+        const string driversJson = """
+        [{"session_key":11396,"driver_number":1,"full_name":"Max Verstappen","team_name":"Red Bull Racing"}]
+        """;
+        const string resultsJson = """
+        [{"session_key":11396,"driver_number":1,"position":1,"duration":5400.123,"gap_to_leader":0,"number_of_laps":57,"dnf":false,"dns":false,"dsq":false}]
+        """;
+        var handler = new FakeHttpMessageHandler(HttpStatusCode.OK, "[]")
+            .WithRoute("sessions", HttpStatusCode.OK, sessionJson)
+            .WithRoute("drivers", HttpStatusCode.OK, driversJson)
+            .WithRoute("session_result", HttpStatusCode.OK, resultsJson);
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.openf1.org/v1/") };
+        var openF1Client = new OpenF1Client(httpClient, new OpenF1RateLimiter());
+        var channel = Substitute.For<IChannel>();
+        var consumer = new ImportRequestedConsumer(channel, openF1Client, new EventPublisher(channel), NullLogger<ImportRequestedConsumer>.Instance);
+
+        await consumer.HandleImportRequestedAsync(new ImportRequested(11396));
+
+        await channel.Received(1).BasicPublishAsync(
+            exchange: ExchangeNames.F1Events,
+            routingKey: "history.session_driver",
+            mandatory: true,
+            basicProperties: Arg.Any<BasicProperties>(),
+            body: Arg.Is<ReadOnlyMemory<byte>>(body =>
+                Encoding.UTF8.GetString(body.ToArray()).Contains("\"driverNumber\":1") &&
+                Encoding.UTF8.GetString(body.ToArray()).Contains("\"fullName\":\"Max Verstappen\"") &&
+                Encoding.UTF8.GetString(body.ToArray()).Contains("\"position\":1")),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task HandleImportRequestedAsync_PublishesOneEventPerLap()
     {
         const string json = """
