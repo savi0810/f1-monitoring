@@ -8,10 +8,10 @@ const router = createRouter({
     { path: '/live', name: 'live', component: () => import('@/pages/LivePage.vue'), meta: { requiresAuth: true } },
     {
       path: '/sessions',
+      name: 'sessions',
       component: () => import('@/pages/PastRacesPage.vue'),
       meta: { requiresAuth: true },
       children: [
-        { path: '', name: 'sessions' },
         { path: ':sessionKey', name: 'session', component: () => import('@/features/telemetry/components/SessionDetails.vue') },
       ],
     },
