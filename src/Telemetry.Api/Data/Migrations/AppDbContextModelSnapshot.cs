@@ -132,11 +132,62 @@ namespace Telemetry.Api.Data.Migrations
                     b.ToTable("Sessions");
                 });
 
+            modelBuilder.Entity("Telemetry.Api.Data.Models.SessionDriver", b =>
+                {
+                    b.Property<int>("SessionKey")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DriverNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<bool?>("DidNotFinish")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("DidNotStart")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("Disqualified")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DurationJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("GapToLeaderJson")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("NumberOfLaps")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TeamName")
+                        .HasColumnType("text");
+
+                    b.HasKey("SessionKey", "DriverNumber");
+
+                    b.ToTable("SessionDrivers");
+                });
+
             modelBuilder.Entity("Telemetry.Api.Data.Models.Session", b =>
                 {
-                    b.HasOne("Telemetry.Api.Data.Models.Meeting", null)
+                    b.HasOne("Telemetry.Api.Data.Models.Meeting", "Meeting")
                         .WithMany()
                         .HasForeignKey("MeetingKey")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Meeting");
+                });
+
+            modelBuilder.Entity("Telemetry.Api.Data.Models.SessionDriver", b =>
+                {
+                    b.HasOne("Telemetry.Api.Data.Models.Session", null)
+                        .WithMany()
+                        .HasForeignKey("SessionKey")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
