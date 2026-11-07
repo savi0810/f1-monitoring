@@ -23,6 +23,17 @@ export interface SessionYear {
   meetings: SessionMeeting[]
 }
 
+export interface SessionCatalogMeeting {
+  meetingKey: number
+  meetingName: string | null
+  sessions: Session[]
+}
+
+export interface SessionCatalogYear {
+  year: number
+  meetings: SessionCatalogMeeting[]
+}
+
 export interface Lap {
   eventId: string
   sessionKey: number
