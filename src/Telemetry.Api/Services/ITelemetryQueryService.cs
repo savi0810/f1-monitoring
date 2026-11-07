@@ -8,4 +8,5 @@ public interface ITelemetryQueryService
     Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year);
     Task<bool> SessionExistsAsync(int sessionKey);
     Task<IReadOnlyList<LapDto>> GetSessionLapsAsync(int sessionKey);
+    Task<IReadOnlyList<SessionResultDto>> GetSessionResultsAsync(int sessionKey);
 }

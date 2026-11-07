@@ -24,6 +24,15 @@ public class TelemetryController : ControllerBase
         return Ok(await _telemetryQueryService.GetCatalogAsync(type, year));
     }
 
+    [HttpGet("sessions/{sessionKey:int}/results")]
+    public async Task<ActionResult<IReadOnlyList<SessionResultDto>>> GetSessionResults(int sessionKey)
+    {
+        if (!await _telemetryQueryService.SessionExistsAsync(sessionKey))
+            return NotFound();
+
+        return Ok(await _telemetryQueryService.GetSessionResultsAsync(sessionKey));
+    }
+
     [HttpGet("sessions/{sessionKey:int}/laps")]
     public async Task<ActionResult<IReadOnlyList<LapDto>>> GetSessionLaps(int sessionKey)
     {
