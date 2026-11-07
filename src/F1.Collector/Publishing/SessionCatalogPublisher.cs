@@ -32,8 +32,10 @@ public class SessionCatalogPublisher : BackgroundService
             var meetingsByKey = meetings.ToDictionary(meeting => meeting.MeetingKey);
 
             await _eventPublisher.PublishSessionsAsync(
-                sessions.Select(session => SessionAvailableMapper.Map(
-                    session, meetingsByKey.GetValueOrDefault(session.MeetingKey))),
+                sessions
+                    .Where(session => !session.IsCancelled)
+                    .Select(session => SessionAvailableMapper.Map(
+                        session, meetingsByKey.GetValueOrDefault(session.MeetingKey))),
                 cancellationToken);
         }
     }
