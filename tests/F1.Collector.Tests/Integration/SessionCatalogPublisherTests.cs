@@ -99,7 +99,7 @@ public class SessionCatalogPublisherTests
 
         await publisher.StartAsync(CancellationToken.None);
 
-        var exception = await Record.ExceptionAsync(() => publisher.ExecuteTask!);
+        var exception = await Record.ExceptionAsync(() => publisher.StopAsync(CancellationToken.None));
         Assert.Null(exception);
     }
 }
