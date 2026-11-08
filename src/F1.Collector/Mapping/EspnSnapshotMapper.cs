@@ -14,7 +14,7 @@ public class EspnSnapshotMapper
     public LiveRaceSnapshot? MapSnapshot(EspnCompetition competition, string sessionName, Guid eventId, long version, DateTimeOffset observedAt)
     {
         var sessionType = competition.Type?.Abbreviation;
-        if (!string.Equals(sessionType, "Race", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(competition.Id) || competition.Date == null)
+        if (sessionType == null || !string.Equals(sessionType, "Race", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(competition.Id) || competition.Date == null)
             return null;
 
         var status = competition.Status?.Type;
