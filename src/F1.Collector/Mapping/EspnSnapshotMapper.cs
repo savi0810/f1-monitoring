@@ -11,6 +11,16 @@ public class EspnSnapshotMapper
         return raceEvent?.Competitions?.FirstOrDefault(item => item.Id == competitionId);
     }
 
+    public LiveRaceSnapshot? MapSnapshot(EspnCompetition competition, string sessionName, string sessionType, Guid eventId, long version, DateTimeOffset observedAt)
+    {
+        if (!string.Equals(sessionType, "Race", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(competition.Id) || competition.Date == null)
+            return null;
+
+        var status = competition.Status?.Type;
+
+        return new LiveRaceSnapshot(eventId, "espn", $"espn:{competition.Id}", version, observedAt, competition.Date.Value, sessionType, sessionName, MapState(competition.Status), status?.Completed, status?.Description ?? "", MapDrivers(competition), status?.State);
+    }
+
     public string MapState(EspnStatus? status)
     {
         return (status?.Type?.State, status?.Type?.Completed) switch
