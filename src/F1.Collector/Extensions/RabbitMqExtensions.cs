@@ -31,12 +31,16 @@ public static class RabbitMqExtensions
 
         services.AddKeyedSingleton<IChannel>("events", CreatePublisherChannel);
         services.AddKeyedSingleton<IChannel>("catalog", CreatePublisherChannel);
+        services.AddKeyedSingleton<IChannel>("live-snapshot", CreatePublisherChannel);
 
         services.AddSingleton(sp =>
             new EventPublisher(sp.GetRequiredKeyedService<IChannel>("events")));
 
         services.AddKeyedSingleton<EventPublisher>("catalog", (sp, _) =>
             new EventPublisher(sp.GetRequiredKeyedService<IChannel>("catalog")));
+
+        services.AddSingleton(sp =>
+            new LiveSnapshotPublisher(sp.GetRequiredKeyedService<IChannel>("live-snapshot")));
 
         return services;
     }
