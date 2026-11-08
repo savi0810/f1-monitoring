@@ -29,6 +29,7 @@ builder.Services.AddHttpClient<EspnClient>(client =>
 });
 builder.Services.AddHostedService<ImportRequestedConsumer>();
 builder.Services.AddHostedService<SessionCatalogPublisher>();
+builder.Services.AddHostedService<EspnPollingWorker>();
 
 var app = builder.Build();
 
