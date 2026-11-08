@@ -39,14 +39,14 @@ public class EspnSnapshotMapper
         foreach (var competitor in competition.Competitors ?? [])
         {
             var athlete = competitor.Athlete;
-            if (athlete == null || string.IsNullOrWhiteSpace(athlete.Id))
+            if (string.IsNullOrWhiteSpace(competitor.Id))
                 continue;
 
-            var fullName = athlete.FullName ?? athlete.ShortName ?? athlete.Id;
-            var shortName = athlete.ShortName ?? athlete.FullName ?? athlete.Id;
+            var fullName = athlete?.FullName ?? athlete?.ShortName ?? competitor.Id;
+            var shortName = athlete?.ShortName ?? athlete?.FullName ?? competitor.Id;
             var position = competitor.Order > 0 ? competitor.Order : null;
 
-            drivers.Add(new LiveDriverSnapshot($"espn:{athlete.Id}", fullName, shortName, position));
+            drivers.Add(new LiveDriverSnapshot($"espn:{competitor.Id}", fullName, shortName, position));
         }
 
         return drivers;
