@@ -28,22 +28,35 @@ public class SessionCatalogPublisher : BackgroundService
         for (var year = FirstYear; year <= DateTime.UtcNow.Year; year++)
         {
             var sessions = await _openF1Client.GetSessionsAsync(year, cancellationToken);
+            var meetings = await _openF1Client.GetMeetingsAsync(year, cancellationToken);
+            var meetingsByKey = meetings.ToDictionary(meeting => meeting.MeetingKey);
 
             await _eventPublisher.PublishSessionsAsync(
-                sessions.Where(session => !session.IsCancelled).Select(SessionAvailableMapper.Map),
+                sessions
+                    .Where(session => !session.IsCancelled)
+                    .Select(session => SessionAvailableMapper.Map(
+                        session, meetingsByKey.GetValueOrDefault(session.MeetingKey))),
                 cancellationToken);
         }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        try
+        while (!stoppingToken.IsCancellationRequested)
         {
-            await PublishCatalogAsync(stoppingToken);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogError(ex, "Sessions catalog was not published.");
+            var delay = TimeSpan.FromHours(12);
+
+            try
+            {
+                await PublishCatalogAsync(stoppingToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Sessions catalog was not published.");
+                delay = TimeSpan.FromMinutes(15);
+            }
+
+            await Task.Delay(delay, stoppingToken);
         }
     }
 }

@@ -10,6 +10,13 @@ public class SessionRepositoryTests : IDisposable
 {
     private readonly SqliteDb<AppDbContext> _db = new();
 
+    public SessionRepositoryTests()
+    {
+        using var context = _db.Create();
+        context.Meetings.Add(new Meeting { MeetingKey = 1308, MeetingName = "Bahrain Grand Prix" });
+        context.SaveChanges();
+    }
+
     public void Dispose() => _db.Dispose();
 
     private static Session NewSession(int sessionKey = 11731, string sessionName = "Race") => new()
@@ -226,6 +233,27 @@ public class SessionRepositoryTests : IDisposable
         LapNumber = lapNumber,
         OccurredAt = DateTimeOffset.UtcNow
     };
+
+    [Fact]
+    public async Task GetCatalogAsync_GroupsSessionsByYearAndMeeting()
+    {
+        var earlier = NewSession(11730, "Qualifying");
+        earlier.DateStart = earlier.DateStart.AddDays(-1);
+        earlier.DateEnd = earlier.DateEnd.AddDays(-1);
+
+        var repository = new SessionRepository(_db.Create());
+        await repository.UpsertSessionAsync(NewSession(11731));
+        await repository.UpsertSessionAsync(earlier);
+
+        var catalog = await repository.GetCatalogAsync(null, null);
+
+        var year = Assert.Single(catalog);
+        Assert.Equal(2026, year.Year);
+        var meeting = Assert.Single(year.Meetings);
+        Assert.Equal(1308, meeting.MeetingKey);
+        Assert.Equal("Bahrain Grand Prix", meeting.MeetingName);
+        Assert.Equal([11730, 11731], meeting.Sessions.Select(s => s.SessionKey));
+    }
 
     [Fact]
     public async Task GetSessionsAsync_ReturnsSessionsWithLapCount()

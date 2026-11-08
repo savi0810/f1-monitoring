@@ -14,6 +14,40 @@ public class OpenF1Client
         _rateLimiter = rateLimiter;
     }
 
+    public async Task<IReadOnlyList<OpenF1SessionResult>> GetSessionResultsAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var results = await _httpClient.GetFromJsonAsync<List<OpenF1SessionResult>>(
+                $"session_result?session_key={sessionKey}", cancellationToken);
+
+            return results ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
+    }
+
+    public async Task<IReadOnlyList<OpenF1Driver>> GetDriversAsync(int sessionKey, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var drivers = await _httpClient.GetFromJsonAsync<List<OpenF1Driver>>(
+                $"drivers?session_key={sessionKey}", cancellationToken);
+
+            return drivers ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
+    }
+
     public async Task<IReadOnlyList<OpenF1Lap>> GetLapsAsync(int sessionKey, CancellationToken cancellationToken = default)
     {
         await _rateLimiter.WaitAsync(cancellationToken);
@@ -62,6 +96,23 @@ public class OpenF1Client
                 $"sessions?year={year}", cancellationToken);
 
             return sessions ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return [];
+        }
+    }
+
+    public async Task<IReadOnlyList<OpenF1Meeting>> GetMeetingsAsync(int year, CancellationToken cancellationToken = default)
+    {
+        await _rateLimiter.WaitAsync(cancellationToken);
+
+        try
+        {
+            var meetings = await _httpClient.GetFromJsonAsync<List<OpenF1Meeting>>(
+                $"meetings?year={year}", cancellationToken);
+
+            return meetings ?? [];
         }
         catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {

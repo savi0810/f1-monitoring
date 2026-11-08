@@ -21,6 +21,7 @@ public class LapEventConsumerTests : IDisposable
         var services = new ServiceCollection();
         services.AddScoped(_ => _db.Create());
         services.AddScoped<ILapRepository, LapRepository>();
+        services.AddScoped<ISessionDriverRepository, SessionDriverRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         _provider = services.BuildServiceProvider();
     }
@@ -33,6 +34,41 @@ public class LapEventConsumerTests : IDisposable
 
     private LapEventConsumer CreateConsumer() =>
         new(Substitute.For<IChannel>(), _provider.GetRequiredService<IServiceScopeFactory>());
+
+    [Fact]
+    public async Task HandleRaceEventAsync_SessionDriver_PersistsResult()
+    {
+        await using var context = _db.Create();
+        await new MeetingRepository(context).UpsertMeetingAsync(
+            new Meeting { MeetingKey = 1, MeetingName = "Bahrain Grand Prix" });
+        await new SessionRepository(context).UpsertSessionAsync(new Session
+        {
+            SessionKey = 11396,
+            MeetingKey = 1,
+            Year = 2026,
+            SessionType = "Race",
+            SessionName = "Race",
+            DateStart = DateTimeOffset.UtcNow,
+            DateEnd = DateTimeOffset.UtcNow
+        });
+
+        var payload = new SessionDriverPayload(
+            "Max Verstappen", "Red Bull Racing", 1, 57, "5400.123", null, false, false, false);
+        var raceEvent = new RaceEvent(
+            Guid.NewGuid(), EventTypes.SessionDriver, 11396, 1, null,
+            EventSerializer.WritePayload(payload));
+
+        await CreateConsumer().HandleRaceEventAsync(raceEvent);
+
+        var result = await context.SessionDrivers.FindAsync(11396, 1);
+        Assert.NotNull(result);
+        Assert.Equal("Max Verstappen", result.FullName);
+        Assert.Equal("Red Bull Racing", result.TeamName);
+        Assert.Equal(1, result.Position);
+        Assert.Equal(57, result.NumberOfLaps);
+        Assert.Equal("5400.123", result.DurationJson);
+        Assert.False(result.DidNotFinish);
+    }
 
     [Fact]
     public async Task HandleRaceEventAsync_LapCompleted_PersistsLap()
@@ -50,6 +86,7 @@ public class LapEventConsumerTests : IDisposable
     public async Task HandleRaceEventAsync_SessionImportFinished_MarksImportCompleted()
     {
         await using var context = _db.Create();
+        await new MeetingRepository(context).UpsertMeetingAsync(new Meeting { MeetingKey = 1, MeetingName = "Bahrain Grand Prix" });
         var repository = new SessionRepository(context);
         var importId = Guid.NewGuid();
         await repository.UpsertSessionAsync(new Session
@@ -84,6 +121,7 @@ public class LapEventConsumerTests : IDisposable
     public async Task HandleRaceEventAsync_SessionImportFinishedWithError_MarksImportFailed()
     {
         await using var context = _db.Create();
+        await new MeetingRepository(context).UpsertMeetingAsync(new Meeting { MeetingKey = 1, MeetingName = "Bahrain Grand Prix" });
         var repository = new SessionRepository(context);
         var importId = Guid.NewGuid();
         const string error = "OpenF1 request failed";

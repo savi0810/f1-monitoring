@@ -1,5 +1,5 @@
 import { clearToken, loadToken } from '@/features/auth/tokenStorage'
-import type { Lap, Session, SessionFilters, SessionImport } from '../types'
+import type { SessionCatalogYear, SessionFilters, SessionImport, SessionResult } from '../types'
 
 const baseUrl = '/api/telemetry/sessions'
 
@@ -18,19 +18,19 @@ async function readJson<T>(response: Response, fallback: string): Promise<T> {
   return await response.json() as T
 }
 
-export async function getSessions(filters: SessionFilters = {}, signal?: AbortSignal): Promise<Session[]> {
+export async function getSessions(filters: SessionFilters = {}, signal?: AbortSignal): Promise<SessionCatalogYear[]> {
   const query = new URLSearchParams()
   if (filters.year !== undefined) query.set('year', String(filters.year))
   if (filters.type) query.set('type', filters.type)
 
   const suffix = query.toString()
   const response = await fetch(`${baseUrl}${suffix ? `?${suffix}` : ''}`, { signal })
-  return readJson<Session[]>(response, 'Не удалось загрузить каталог сессий.')
+  return readJson<SessionCatalogYear[]>(response, 'Не удалось загрузить каталог сессий.')
 }
 
-export async function getSessionLaps(sessionKey: number, signal?: AbortSignal): Promise<Lap[]> {
-  const response = await fetch(`${baseUrl}/${sessionKey}/laps`, { signal })
-  return readJson<Lap[]>(response, 'Не удалось загрузить круги.')
+export async function getSessionResults(sessionKey: number, signal?: AbortSignal): Promise<SessionResult[]> {
+  const response = await fetch(`${baseUrl}/${sessionKey}/results`, { signal })
+  return readJson<SessionResult[]>(response, 'Не удалось загрузить результаты.')
 }
 
 export async function getImportStatus(sessionKey: number, signal?: AbortSignal): Promise<SessionImport | null> {
@@ -39,13 +39,14 @@ export async function getImportStatus(sessionKey: number, signal?: AbortSignal):
   return readJson<SessionImport | null>(response, 'Не удалось загрузить статус импорта.')
 }
 
-export async function startImport(sessionKey: number): Promise<SessionImport> {
+export async function startImport(sessionKey: number, signal?: AbortSignal): Promise<SessionImport> {
   const token = loadToken()
   if (!token) throw new Error('Срок авторизации истёк. Войдите снова.')
 
   const response = await fetch(`${baseUrl}/${sessionKey}/import`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
+    signal,
   })
 
   if (response.status === 503) {

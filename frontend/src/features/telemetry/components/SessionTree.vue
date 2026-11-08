@@ -11,11 +11,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
-import type { SessionYear } from '../types'
+import type { SessionCatalogYear } from '../types'
 import { sessionLabel } from '../utils/sessionLabel'
 
 const props = defineProps<{
-  years: SessionYear[]
+  years: SessionCatalogYear[]
 }>()
 
 const route = useRoute()
@@ -61,7 +61,7 @@ watch(
       >
         <SidebarMenuItem>
           <CollapsibleTrigger as-child>
-            <SidebarMenuButton class="group">
+            <SidebarMenuButton class="group cursor-pointer transition-colors hover:bg-primary/20 data-[state=open]:hover:bg-primary/20">
               <ChevronRight class="transition-transform motion-reduce:transition-none group-data-[state=open]:rotate-90" />
               {{ year.year }}
             </SidebarMenuButton>
@@ -77,9 +77,9 @@ watch(
               >
                 <SidebarMenuSubItem>
                   <CollapsibleTrigger as-child>
-                    <SidebarMenuSubButton class="group">
+                    <SidebarMenuSubButton class="group cursor-pointer transition-colors hover:bg-primary/20">
                       <ChevronRight class="transition-transform motion-reduce:transition-none group-data-[state=open]:rotate-90" />
-                      {{ meeting.name }}
+                      {{ meeting.meetingName || `Уикенд #${meeting.meetingKey}` }}
                     </SidebarMenuSubButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -93,7 +93,7 @@ watch(
                           :to="{ name: 'session', params: { sessionKey: session.sessionKey } }"
                           custom
                         >
-                          <SidebarMenuSubButton as-child :is-active="isExactActive">
+                          <SidebarMenuSubButton as-child :is-active="isExactActive" class="transition-colors hover:bg-primary/20 data-[active=true]:bg-primary/30">
                             <a :href="href" @click="navigate">
                             {{ sessionLabel(session) }}
                             </a>

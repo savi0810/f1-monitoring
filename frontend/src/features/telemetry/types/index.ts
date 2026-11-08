@@ -12,28 +12,61 @@ export interface Session {
   lapCount: number
 }
 
-export interface SessionMeeting {
+export interface SessionCatalogMeeting {
   meetingKey: number
-  name: string
+  meetingName: string | null
   sessions: Session[]
 }
 
-export interface SessionYear {
+export interface SessionCatalogYear {
   year: number
-  meetings: SessionMeeting[]
+  meetings: SessionCatalogMeeting[]
 }
 
-export interface Lap {
-  eventId: string
-  sessionKey: number
-  driverNumber: number | null
+export interface SessionResult {
+  driverNumber: number
+  fullName: string | null
+  teamName: string | null
+  position: number | null
+  numberOfLaps: number | null
+  race: RaceResult | null
+  practice: PracticeResult | null
+  qualifying: QualifyingResult | null
+  didNotFinish: boolean | null
+  didNotStart: boolean | null
+  disqualified: boolean | null
+  laps: SessionResultLap[]
+}
+
+export interface RaceResult {
+  totalTimeSeconds: number | null
+  gapToLeaderSeconds: number | null
+  gapToLeaderText: string | null
+}
+
+export interface PracticeResult {
+  bestLapSeconds: number | null
+  gapToLeaderSeconds: number | null
+}
+
+export interface QualifyingResult {
+  phases: QualifyingPhaseResult[]
+}
+
+export interface QualifyingPhaseResult {
+  phase: number
+  bestLapSeconds: number | null
+  gapToLeaderSeconds: number | null
+}
+
+export interface SessionResultLap {
   lapNumber: number
   lapDuration: number | null
   sector1Duration: number | null
   sector2Duration: number | null
   sector3Duration: number | null
   isPitOutLap: boolean
-  occurredAt: string | null
+  dateStart: string | null
 }
 
 export const ImportStatus = {

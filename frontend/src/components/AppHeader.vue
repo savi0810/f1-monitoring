@@ -12,28 +12,28 @@ function logout() {
 </script>
 
 <template>
-  <header class="border-b">
+  <header class="sticky top-0 z-20 border-b bg-background">
     <div class="flex min-h-16 items-center gap-6 px-6">
-      <span class="font-semibold">F1 Monitor</span>
+      <span class="font-semibold text-primary">F1 Monitor</span>
       <nav class="flex flex-1 items-center gap-6">
         <RouterLink
           :to="{ name: 'live' }"
-          class="text-sm hover:underline"
+          class="text-sm transition-colors hover:text-primary"
           :aria-current="route.name === 'live' ? 'page' : undefined"
-          :class="{ 'font-semibold': route.name === 'live' }"
+          :class="{ 'font-semibold text-primary': route.name === 'live' }"
         >
           Лайв
         </RouterLink>
         <RouterLink
           :to="{ name: 'sessions' }"
-          class="text-sm hover:underline"
+          class="text-sm transition-colors hover:text-primary"
           :aria-current="route.name === 'sessions' || route.name === 'session' ? 'page' : undefined"
-          :class="{ 'font-semibold': route.name === 'sessions' || route.name === 'session' }"
+          :class="{ 'font-semibold text-primary': route.name === 'sessions' || route.name === 'session' }"
         >
           Предыдущие гонки
         </RouterLink>
       </nav>
-      <button class="text-sm hover:underline" @click="logout">Выйти</button>
+      <button class="cursor-pointer text-sm transition-colors hover:text-primary" @click="logout">Выйти</button>
     </div>
   </header>
 </template>

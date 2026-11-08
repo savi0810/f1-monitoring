@@ -6,15 +6,20 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
-import { buildSessionTree } from '@/features/telemetry/utils/buildSessionTree'
 import SessionSidebar from '@/features/telemetry/components/SessionSidebar.vue'
 import { useSessions } from '@/features/telemetry/composables/useSessions'
 
 const { sessions, loading, error, loadSessions } = useSessions()
 const route = useRoute()
-const years = computed(() => buildSessionTree(sessions.value))
+const selectedMeeting = computed(() =>
+  sessions.value
+    .flatMap(year => year.meetings)
+    .find(meeting =>
+      meeting.sessions.some(session => String(session.sessionKey) === route.params.sessionKey),
+    ),
+)
 const selectedSession = computed(() =>
-  sessions.value.find(session => String(session.sessionKey) === route.params.sessionKey),
+  selectedMeeting.value?.sessions.find(session => String(session.sessionKey) === route.params.sessionKey),
 )
 
 onMounted(() => {
@@ -24,14 +29,14 @@ onMounted(() => {
 
 <template>
   <SidebarProvider>
-    <SessionSidebar :years="years" :loading="loading" :error="error" @retry="loadSessions()" />
+    <SessionSidebar :years="sessions" :loading="loading" :error="error" @retry="loadSessions()" />
 
     <SidebarInset>
       <div class="p-4">
         <SidebarTrigger aria-label="Открыть или закрыть список сессий" />
       </div>
       <RouterView v-slot="{ Component, route }">
-        <component :is="Component" v-if="Component" :key="route.params.sessionKey" :session="selectedSession" />
+        <component :is="Component" v-if="Component" :key="route.params.sessionKey" :session="selectedSession" :meeting="selectedMeeting" />
         <p v-else class="p-6 text-muted-foreground">Выберите сессию в списке.</p>
       </RouterView>
     </SidebarInset>

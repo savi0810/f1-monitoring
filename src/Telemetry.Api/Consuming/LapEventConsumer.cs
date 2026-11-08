@@ -2,6 +2,7 @@ using System.Text;
 using F1Monitor.Contracts;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 using Telemetry.Api.Mapping;
 
@@ -20,10 +21,37 @@ public class LapEventConsumer : BackgroundService
 
     public async Task HandleRaceEventAsync(RaceEvent raceEvent, CancellationToken cancellationToken = default)
     {
-        if (raceEvent.Type != EventTypes.LapCompleted && raceEvent.Type != EventTypes.SessionImportFinished)
+        if (raceEvent.Type != EventTypes.LapCompleted &&
+            raceEvent.Type != EventTypes.SessionDriver &&
+            raceEvent.Type != EventTypes.SessionImportFinished)
             return;
 
         using var scope = _scopeFactory.CreateScope();
+
+        if (raceEvent.Type == EventTypes.SessionDriver)
+        {
+            var driverNumber = raceEvent.DriverNumber
+                ?? throw new InvalidOperationException("Session driver event has no driver number.");
+            var payload = EventSerializer.ReadPayload<SessionDriverPayload>(raceEvent);
+            var driver = new SessionDriver
+            {
+                SessionKey = raceEvent.SessionKey,
+                DriverNumber = driverNumber,
+                FullName = payload.FullName,
+                TeamName = payload.TeamName,
+                Position = payload.Position,
+                NumberOfLaps = payload.NumberOfLaps,
+                DurationJson = payload.DurationJson,
+                GapToLeaderJson = payload.GapToLeaderJson,
+                DidNotFinish = payload.DidNotFinish,
+                DidNotStart = payload.DidNotStart,
+                Disqualified = payload.Disqualified
+            };
+            var driverRepository = scope.ServiceProvider.GetRequiredService<ISessionDriverRepository>();
+
+            await driverRepository.UpsertAsync(driver);
+            return;
+        }
 
         if (raceEvent.Type == EventTypes.LapCompleted)
         {

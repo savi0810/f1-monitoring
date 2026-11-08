@@ -1,15 +1,16 @@
 import { onScopeDispose, ref } from 'vue'
-import { getImportStatus, getSessionLaps, startImport } from '../api/telemetryApi'
+import { getImportStatus, startImport } from '../api/telemetryApi'
 import { ImportStatus } from '../types'
-import type { Lap, SessionImport } from '../types'
+import type { SessionImport } from '../types'
 
-export function useSessionImport(sessionKey: number) {
-  const laps = ref<Lap[]>([])
+export function useSessionImport(sessionKey: number, onCompleted: () => void) {
   const sessionImport = ref<SessionImport | null>(null)
+  const statusLoaded = ref(false)
   const loading = ref(false)
   const starting = ref(false)
   const error = ref('')
   let controller: AbortController | undefined
+  let startController: AbortController | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let disposed = false
 
@@ -18,10 +19,17 @@ export function useSessionImport(sessionKey: number) {
     timer = undefined
   }
 
+  function isActive(status: SessionImport | null) {
+    return status?.status === ImportStatus.Pending || status?.status === ImportStatus.Processing
+  }
+
+  function isFinished(status: SessionImport | null) {
+    return status?.status === ImportStatus.Completed || status?.status === ImportStatus.Empty
+  }
+
   function scheduleRefresh() {
     clearTimer()
-    if (sessionImport.value?.status === ImportStatus.Pending
-      || sessionImport.value?.status === ImportStatus.Processing) {
+    if (isActive(sessionImport.value)) {
       timer = setTimeout(() => void refresh(true), 3000)
     }
   }
@@ -35,28 +43,18 @@ export function useSessionImport(sessionKey: number) {
     error.value = ''
 
     try {
-      let status: SessionImport | null
-      let savedLaps: Lap[] | null
-
-      if (background) {
-        status = await getImportStatus(sessionKey, request.signal)
-        const active = status?.status === ImportStatus.Pending
-          || status?.status === ImportStatus.Processing
-        savedLaps = active ? null : await getSessionLaps(sessionKey, request.signal)
-      } else {
-        ;[status, savedLaps] = await Promise.all([
-          getImportStatus(sessionKey, request.signal),
-          getSessionLaps(sessionKey, request.signal),
-        ])
-      }
-
+      const previousStatus = sessionImport.value
+      const status = await getImportStatus(sessionKey, request.signal)
       if (request.signal.aborted || disposed) return
+
       sessionImport.value = status
-      if (savedLaps) laps.value = savedLaps
+      statusLoaded.value = true
+      if (isActive(previousStatus) && isFinished(status)) onCompleted()
       scheduleRefresh()
     } catch (cause) {
       if (!request.signal.aborted && !disposed) {
-        error.value = cause instanceof Error ? cause.message : 'Не удалось загрузить данные сессии.'
+        error.value = cause instanceof Error ? cause.message : 'Не удалось загрузить статус импорта.'
+        scheduleRefresh()
       }
     } finally {
       if (!request.signal.aborted && !disposed) loading.value = false
@@ -65,25 +63,28 @@ export function useSessionImport(sessionKey: number) {
 
   async function importSession() {
     clearTimer()
+    controller?.abort()
+    loading.value = false
+    startController?.abort()
+    const request = new AbortController()
+    startController = request
     starting.value = true
     error.value = ''
 
     try {
-      const result = await startImport(sessionKey)
-      if (disposed) return
+      const result = await startImport(sessionKey, request.signal)
+      if (request.signal.aborted || disposed) return
       sessionImport.value = result
+      statusLoaded.value = true
 
-      if (result.status === ImportStatus.Completed || result.status === ImportStatus.Empty) {
-        await refresh()
-      } else {
-        scheduleRefresh()
-      }
+      if (isFinished(result)) onCompleted()
+      else scheduleRefresh()
     } catch (cause) {
-      if (!disposed) {
+      if (!request.signal.aborted && !disposed) {
         error.value = cause instanceof Error ? cause.message : 'Не удалось запустить импорт.'
       }
     } finally {
-      if (!disposed) starting.value = false
+      if (!request.signal.aborted && !disposed) starting.value = false
     }
   }
 
@@ -91,7 +92,8 @@ export function useSessionImport(sessionKey: number) {
     disposed = true
     clearTimer()
     controller?.abort()
+    startController?.abort()
   })
 
-  return { laps, sessionImport, loading, starting, error, refresh, importSession }
+  return { sessionImport, statusLoaded, loading, starting, error, refresh, importSession }
 }

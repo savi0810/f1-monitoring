@@ -13,6 +13,8 @@ public static class TelemetryExtensions
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<ILapRepository, LapRepository>();
+        services.AddScoped<IMeetingRepository, MeetingRepository>();
+        services.AddScoped<ISessionDriverRepository, SessionDriverRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<ISessionImportService, SessionImportService>();
         services.AddScoped<ITelemetryQueryService, TelemetryQueryService>();

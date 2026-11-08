@@ -14,8 +14,28 @@ public class AppDbContext : DbContext
 
     public DbSet<Session> Sessions { get; set; }
 
+    public DbSet<Meeting> Meetings { get; set; }
+
+    public DbSet<SessionDriver> SessionDrivers { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<SessionDriver>()
+            .HasKey(d => new { d.SessionKey, d.DriverNumber });
+
+        modelBuilder.Entity<SessionDriver>()
+            .HasOne<Session>()
+            .WithMany()
+            .HasForeignKey(d => d.SessionKey)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Meeting>()
+            .HasKey(m => m.MeetingKey);
+
+        modelBuilder.Entity<Meeting>()
+            .Property(m => m.MeetingKey)
+            .ValueGeneratedNever();
+
         modelBuilder.Entity<Lap>()
             .HasKey(l => l.EventId);
 
@@ -28,6 +48,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Session>()
             .Property(s => s.SessionKey)
             .ValueGeneratedNever();
+
+        modelBuilder.Entity<Session>()
+            .HasOne(s => s.Meeting)
+            .WithMany()
+            .HasForeignKey(s => s.MeetingKey)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Session>()
             .HasIndex(s => new { s.Year, s.SessionType });

@@ -3,9 +3,10 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { register } from '@/features/auth/authApi'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel, FieldError } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 
 const router = useRouter()
 
@@ -51,7 +52,7 @@ async function handleRegister() {
   <main class="flex min-h-screen items-center justify-center bg-background">
     <Card class="w-full max-w-sm">
       <CardHeader>
-        <CardTitle class="text-xl">Регистрация</CardTitle>
+        <h1 class="text-xl font-semibold leading-none">Регистрация</h1>
       </CardHeader>
 
       <CardContent>
@@ -85,6 +86,7 @@ async function handleRegister() {
 
       <CardFooter>
         <Button class="w-full gap-2" type="submit" form="register-form" :disabled="isSubmitting">
+          <Spinner v-if="isSubmitting" data-icon="inline-start" />
           {{ isSubmitting ? 'Создаём...' : 'Создать аккаунт' }}
         </Button>
       </CardFooter>

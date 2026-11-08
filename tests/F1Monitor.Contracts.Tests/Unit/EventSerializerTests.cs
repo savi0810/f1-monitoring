@@ -125,7 +125,7 @@ public class EventSerializerTests
     public void GenericSerializeThenDeserialize_RestoresSessionAvailable()
     {
         var original = new SessionAvailable(
-            11396, 1297, 2026, "Race", "Race", "Austin", "United States",
+            11396, 1297, "United States Grand Prix", 2026, "Race", "Race", "Austin", "United States",
             new DateTimeOffset(2026, 10, 25, 20, 0, 0, TimeSpan.Zero),
             new DateTimeOffset(2026, 10, 25, 22, 0, 0, TimeSpan.Zero),
             false);

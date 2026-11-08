@@ -36,10 +36,17 @@ public class ImportRequestedConsumer : BackgroundService
             throw new KeyNotFoundException(
                 $"OpenF1 session {request.SessionKey} was not found.");
 
+        var drivers = await _openF1Client.GetDriversAsync(request.SessionKey, cancellationToken);
+        var results = await _openF1Client.GetSessionResultsAsync(request.SessionKey, cancellationToken);
         var laps = await _openF1Client.GetLapsAsync(request.SessionKey, cancellationToken);
-        var events = laps.Select(lap => LapEventMapper.Map(lap, session));
 
-        await _eventPublisher.PublishToExchangeAsync(events, RoutingKeys.History, cancellationToken);
+        var participants = SessionParticipantMapper.Map(drivers, results);
+        var driverEvents = participants.Select(participant =>
+            SessionParticipantMapper.MapEvent(participant.Driver, participant.Result));
+        var lapEvents = laps.Select(lap => LapEventMapper.Map(lap, session));
+
+        await _eventPublisher.PublishToExchangeAsync(driverEvents, RoutingKeys.History, cancellationToken);
+        await _eventPublisher.PublishToExchangeAsync(lapEvents, RoutingKeys.History, cancellationToken);
         await PublishImportFinishedAsync(request, laps.Count, null, cancellationToken);
     }
 

@@ -19,6 +19,7 @@ public class SessionCatalogConsumerTests : IDisposable
     {
         var services = new ServiceCollection();
         services.AddScoped(_ => _db.Create());
+        services.AddScoped<IMeetingRepository, MeetingRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         _provider = services.BuildServiceProvider();
     }
@@ -39,15 +40,20 @@ public class SessionCatalogConsumerTests : IDisposable
     public async Task HandleSessionAvailableAsync_StoresSession()
     {
         var available = new SessionAvailable(
-            11731, 1308, 2026, "Race", "Race", "Kuala Lumpur", "Bahrain",
+            11731, 1308, "Bahrain Grand Prix", 2026, "Race", "Race", "Kuala Lumpur", "Bahrain",
             new DateTimeOffset(2026, 10, 4, 7, 0, 0, TimeSpan.Zero),
             new DateTimeOffset(2026, 10, 4, 9, 0, 0, TimeSpan.Zero),
             false);
 
         await CreateConsumer().HandleSessionAvailableAsync(available);
 
+        var meeting = Assert.Single(_db.Create().Meetings);
+        Assert.Equal(1308, meeting.MeetingKey);
+        Assert.Equal("Bahrain Grand Prix", meeting.MeetingName);
+
         var stored = Assert.Single(_db.Create().Sessions);
         Assert.Equal(11731, stored.SessionKey);
+        Assert.Equal(1308, stored.MeetingKey);
         Assert.Equal("Race", stored.SessionType);
         Assert.Equal("Kuala Lumpur", stored.CircuitShortName);
     }

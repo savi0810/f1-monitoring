@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Spinner } from '@/components/ui/spinner'
 import { ImportStatus } from '../types'
 import type { SessionImport } from '../types'
 
@@ -17,6 +10,8 @@ const props = defineProps<{
   loading: boolean
   starting: boolean
   error: string
+  importAvailable: boolean
+  statusLoaded: boolean
 }>()
 
 defineEmits<{
@@ -25,53 +20,53 @@ defineEmits<{
 }>()
 
 const statusText = computed(() => {
-  if (!props.sessionImport) return 'Импорт ещё не запускался.'
+  if (!props.sessionImport) return 'Данные ещё не загружены'
 
   switch (props.sessionImport.status) {
     case ImportStatus.Pending:
-      return 'Импорт ожидает обработки.'
     case ImportStatus.Processing:
-      return 'Импорт выполняется.'
+      return 'Данные загружаются'
     case ImportStatus.Completed:
-      return 'Импорт завершён.'
+      return 'Данные загружены'
     case ImportStatus.Empty:
-      return 'Импорт завершён: источник не вернул круги.'
+      return 'Источник не вернул данные'
     case ImportStatus.Failed:
-      return 'Импорт завершился с ошибкой.'
+      return 'Ошибка импорта'
     default:
-      return 'Неизвестный статус импорта.'
+      return 'Неизвестный статус импорта'
   }
 })
 
 const canImport = computed(() =>
-  !props.loading
+  props.importAvailable
+  && props.statusLoaded
+  && !props.loading
   && !props.starting
   && (!props.sessionImport || props.sessionImport.status === ImportStatus.Failed),
 )
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>Импорт сессии</CardTitle>
-      <CardDescription>
-        Сохранённые круги и статус обновляются автоматически во время импорта.
-      </CardDescription>
-    </CardHeader>
-    <CardContent class="flex flex-col gap-2">
-      <p role="status">{{ loading ? 'Загружаем состояние…' : statusText }}</p>
-      <p v-if="sessionImport?.error" class="text-sm text-destructive">
-        {{ sessionImport.error }}
-      </p>
-      <p v-if="error" role="alert" class="text-sm text-destructive">{{ error }}</p>
-    </CardContent>
-    <CardFooter class="flex flex-wrap gap-2">
-      <Button :disabled="!canImport" @click="$emit('import')">
-        {{ starting ? 'Отправляем запрос…' : 'Импортировать круги' }}
+  <div class="flex flex-col items-start gap-2">
+    <div v-if="loading || statusLoaded" role="status" class="flex items-center gap-2 text-sm text-muted-foreground">
+      <Spinner
+        v-if="loading || sessionImport?.status === ImportStatus.Pending || sessionImport?.status === ImportStatus.Processing"
+        aria-hidden="true"
+      />
+      <span>{{ loading ? 'Загружаем состояние…' : statusText }}</span>
+    </div>
+    <p v-if="sessionImport?.error" class="text-sm text-destructive">
+      {{ sessionImport.error }}
+    </p>
+    <p v-if="error" role="alert" class="text-sm text-destructive">{{ error }}</p>
+    <div class="flex flex-wrap gap-2">
+      <Button v-if="canImport || starting" :disabled="!canImport" @click="$emit('import')">
+        <Spinner v-if="starting" data-icon="inline-start" />
+        {{ starting ? 'Отправляем запрос…' : 'Загрузить результаты' }}
       </Button>
       <Button variant="outline" :disabled="loading || starting" @click="$emit('refresh')">
         Обновить
       </Button>
-    </CardFooter>
-  </Card>
+    </div>
+  </div>
 </template>

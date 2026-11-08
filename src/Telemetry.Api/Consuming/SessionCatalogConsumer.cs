@@ -2,6 +2,7 @@ using System.Text;
 using F1Monitor.Contracts;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Telemetry.Api.Data;
 using Telemetry.Api.Data.Models;
 using Telemetry.Api.Data.Repositories;
 
@@ -39,10 +40,24 @@ public class SessionCatalogConsumer : BackgroundService
             IsCancelled = available.IsCancelled
         };
 
-        using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<ISessionRepository>();
+        var meeting = new Meeting
+        {
+            MeetingKey = available.MeetingKey,
+            MeetingName = available.MeetingName,
+        };
 
-        await repository.UpsertSessionAsync(session);
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        
+        var meetingRepository = scope.ServiceProvider.GetRequiredService<IMeetingRepository>();
+        var sessionRepository = scope.ServiceProvider.GetRequiredService<ISessionRepository>();
+
+        await using var transaction = await context.Database.BeginTransactionAsync();
+
+        await meetingRepository.UpsertMeetingAsync(meeting);
+        await sessionRepository.UpsertSessionAsync(session);
+
+        await transaction.CommitAsync();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
