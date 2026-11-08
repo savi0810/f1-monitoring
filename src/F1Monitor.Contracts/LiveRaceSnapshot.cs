@@ -10,6 +10,7 @@ public record LiveRaceSnapshot(
     string SessionType,
     string SessionName,
     string State,
-    bool Completed,
+    bool? Completed,
     string StatusText,
-    IReadOnlyList<LiveDriverSnapshot> Drivers);
+    IReadOnlyList<LiveDriverSnapshot> Drivers,
+    string? RawState);
