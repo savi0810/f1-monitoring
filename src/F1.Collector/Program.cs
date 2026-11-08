@@ -1,6 +1,7 @@
 using F1.Collector.Consuming;
 using F1.Collector.Espn;
 using F1.Collector.Extensions;
+using F1.Collector.Mapping;
 using F1.Collector.OpenF1;
 using F1.Collector.Publishing;
 using Serilog;
@@ -14,6 +15,9 @@ builder.Host.UseSerilog((context, configuration) =>
 
 builder.Services.AddHealthChecks();
 builder.Services.AddSingleton<OpenF1RateLimiter>();
+builder.Services.Configure<EspnOptions>(builder.Configuration.GetSection("Espn"));
+builder.Services.AddSingleton<EspnSnapshotMapper>();
+builder.Services.AddSingleton<EspnPollingSchedule>();
 builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHttpClient<OpenF1Client>(client =>
 {
