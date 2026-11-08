@@ -35,10 +35,23 @@ public class EspnPollingWorker : BackgroundService
         var finishedObservations = 0;
         var failures = 0;
         var exchangeDeclared = false;
+        var selectedRace = (EventId: "", CompetitionId: "");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             var options = _options.CurrentValue;
+            var currentRace = (options.EventId, options.CompetitionId);
+
+            if (currentRace != selectedRace)
+            {
+                selectedRace = currentRace;
+                scheduledAt = null;
+                finishedAt = null;
+                pending = null;
+                finishedObservations = 0;
+                failures = 0;
+            }
+
             var interval = _schedule.GetInterval(options, DateTimeOffset.UtcNow, scheduledAt, finishedAt);
 
             if (interval == null)
