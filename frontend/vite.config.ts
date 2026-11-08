@@ -13,6 +13,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:5055',
+      '/livehub': {
+        target: 'http://localhost:5055',
+        ws: true,
+      },
     },
   },
 })
