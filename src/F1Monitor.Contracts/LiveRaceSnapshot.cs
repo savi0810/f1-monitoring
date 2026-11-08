@@ -4,7 +4,6 @@ public record LiveRaceSnapshot(
     Guid EventId,
     string Source,
     string SessionId,
-    long Version,
     DateTimeOffset ObservedAt,
     DateTimeOffset ScheduledAt,
     string SessionType,

@@ -11,7 +11,7 @@ public class EspnSnapshotMapper
         return raceEvent?.Competitions?.FirstOrDefault(item => item.Id == competitionId);
     }
 
-    public LiveRaceSnapshot? MapSnapshot(EspnCompetition competition, string sessionName, Guid eventId, long version, DateTimeOffset observedAt)
+    public LiveRaceSnapshot? MapSnapshot(EspnCompetition competition, string sessionName, Guid eventId, DateTimeOffset observedAt)
     {
         var sessionType = competition.Type?.Abbreviation;
         if (sessionType == null || !string.Equals(sessionType, "Race", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(competition.Id) || competition.Date == null)
@@ -19,7 +19,7 @@ public class EspnSnapshotMapper
 
         var status = competition.Status?.Type;
 
-        return new LiveRaceSnapshot(eventId, "espn", $"espn:{competition.Id}", version, observedAt, competition.Date.Value, sessionType, sessionName, MapState(competition.Status), status?.Completed, status?.Description ?? "", MapDrivers(competition), status?.State);
+        return new LiveRaceSnapshot(eventId, "espn", $"espn:{competition.Id}", observedAt, competition.Date.Value, sessionType, sessionName, MapState(competition.Status), status?.Completed, status?.Description ?? "", MapDrivers(competition), status?.State);
     }
 
     public string MapState(EspnStatus? status)
