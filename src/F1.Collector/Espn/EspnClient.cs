@@ -8,4 +8,9 @@ public class EspnClient
     {
         _httpClient = httpClient;
     }
+
+    public Task<HttpResponseMessage> GetScoreboardAsync(CancellationToken cancellationToken = default)
+    {
+        return _httpClient.GetAsync("scoreboard", HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+    }
 }
