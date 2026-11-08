@@ -1,9 +1,6 @@
-using F1Monitor.Contracts;
-using Live.Api.Data.DTOs;
-using Live.Api.Data.Models;
+﻿using F1Monitor.Contracts;
 using Live.Api.Data.Repositories;
 using Live.Api.Hubs;
-using Live.Api.Mapping;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Live.Api.Services;
@@ -19,36 +16,39 @@ public class TimingService
         _hub = hub;
     }
 
-    public async Task<LiveSnapshotDto?> GetSnapshotAsync(int sessionKey, CancellationToken cancellationToken = default)
+    public Task<LiveRaceSnapshot?> GetSnapshotAsync(string? sessionId, CancellationToken cancellationToken = default)
     {
-        var snapshot = await _repository.GetAsync(sessionKey, cancellationToken);
-        return snapshot is null ? null : LiveSnapshotMapper.ToDto(snapshot);
+        return _repository.GetAsync(sessionId, cancellationToken);
     }
 
-    public async Task ProcessAsync(RaceEvent raceEvent, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(LiveRaceSnapshot snapshot, CancellationToken cancellationToken = default)
     {
-        var payload = EventSerializer.ReadPayload<TimingUpdatedPayload>(raceEvent);
-        var candidate = new LiveSnapshot
-        {
-            SessionKey = raceEvent.SessionKey,
-            Version = payload.Version,
-            UpdatedAt = raceEvent.OccurredAt ?? DateTimeOffset.UtcNow,
-            Drivers = payload.Drivers.Select(driver => new LiveDriver
-            {
-                DriverNumber = driver.DriverNumber,
-                Position = driver.Position,
-                LapNumber = driver.LapNumber,
-                LastLapSeconds = driver.LastLapSeconds,
-                GapToLeader = driver.GapToLeader
-            }).ToList()
-        };
-
-        var snapshot = await _repository.SaveIfNewerAsync(candidate, cancellationToken);
-
-        if (payload.Version < snapshot.Version)
+        var result = await _repository.SaveIfNewerAsync(snapshot, cancellationToken);
+        if (!result.Saved)
             return;
 
-        await _hub.Clients.Group($"session:{snapshot.SessionKey}")
-            .SendAsync("TimingUpdated", LiveSnapshotMapper.ToDto(snapshot), cancellationToken);
+        var group = _hub.Clients.Group($"session:{snapshot.SessionId}");
+
+        await group.SendAsync("SourceUpdated", new
+        {
+            snapshot.SessionId,
+            snapshot.ObservedAt
+        }, cancellationToken);
+
+        var previous = result.Previous;
+        if (previous != null)
+        {
+            var comparable = snapshot with
+            {
+                EventId = previous.EventId,
+                ObservedAt = previous.ObservedAt,
+                Drivers = previous.Drivers
+            };
+
+            if (comparable == previous && snapshot.Drivers.SequenceEqual(previous.Drivers))
+                return;
+        }
+
+        await group.SendAsync("TimingUpdated", snapshot, cancellationToken);
     }
 }
