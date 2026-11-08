@@ -11,6 +11,17 @@ public class EspnSnapshotMapper
         return raceEvent?.Competitions?.FirstOrDefault(item => item.Id == competitionId);
     }
 
+    public string MapState(EspnStatus? status)
+    {
+        return (status?.Type?.State, status?.Type?.Completed) switch
+        {
+            ("pre", false) => "pre",
+            ("in", false) => "in",
+            ("post", true) => "post",
+            _ => "unknown"
+        };
+    }
+
     public IReadOnlyList<LiveDriverSnapshot> MapDrivers(EspnCompetition competition)
     {
         var drivers = new List<LiveDriverSnapshot>();
