@@ -11,8 +11,9 @@ public class EspnSnapshotMapper
         return raceEvent?.Competitions?.FirstOrDefault(item => item.Id == competitionId);
     }
 
-    public LiveRaceSnapshot? MapSnapshot(EspnCompetition competition, string sessionName, string sessionType, Guid eventId, long version, DateTimeOffset observedAt)
+    public LiveRaceSnapshot? MapSnapshot(EspnCompetition competition, string sessionName, Guid eventId, long version, DateTimeOffset observedAt)
     {
+        var sessionType = competition.Type?.Abbreviation;
         if (!string.Equals(sessionType, "Race", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(competition.Id) || competition.Date == null)
             return null;
 
