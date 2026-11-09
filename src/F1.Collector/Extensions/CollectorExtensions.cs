@@ -18,6 +18,10 @@ public static class CollectorExtensions
             .Validate(options => options.PollIntervalMilliseconds > 0, "Espn:PollIntervalMilliseconds must be positive.")
             .Validate(options => options.SchedulePollIntervalSeconds > 0, "Espn:SchedulePollIntervalSeconds must be positive.")
             .Validate(options => options.RequestTimeoutSeconds > 0, "Espn:RequestTimeoutSeconds must be positive.")
+            .Validate(options => !options.Enabled || !string.IsNullOrWhiteSpace(options.EventId), "Espn:EventId is required when ESPN is enabled.")
+            .Validate(options => !options.Enabled || !string.IsNullOrWhiteSpace(options.CompetitionId), "Espn:CompetitionId is required when ESPN is enabled.")
+            .Validate(options => options.FastPollingLeadMinutes >= 0, "Espn:FastPollingLeadMinutes must not be negative.")
+            .Validate(options => options.PostFinishMinutes >= 0, "Espn:PostFinishMinutes must not be negative.")
             .ValidateOnStart();
 
         services.AddSingleton<EspnSnapshotMapper>();
