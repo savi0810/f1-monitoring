@@ -67,7 +67,7 @@ public class LiveEventConsumer : BackgroundService
         await _channel.QueueBindAsync(
             queue: QueueNames.LiveSnapshots,
             exchange: ExchangeNames.F1Live,
-            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.LiveSnapshot),
+            routingKey: RoutingKeys.LiveEvents,
             cancellationToken: stoppingToken);
 
         await _channel.BasicQosAsync(
