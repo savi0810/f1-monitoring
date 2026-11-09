@@ -12,5 +12,4 @@ public class EspnOptions
     public int FastPollingLeadMinutes { get; set; } = 10;
     public int PostFinishMinutes { get; set; } = 5;
     public DateTimeOffset? FastPollingStartsAt { get; set; }
-    public bool CaptureEnabled { get; set; }
 }
