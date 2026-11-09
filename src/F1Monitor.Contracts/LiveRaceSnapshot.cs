@@ -12,4 +12,5 @@ public record LiveRaceSnapshot(
     bool? Completed,
     string StatusText,
     IReadOnlyList<LiveDriverSnapshot> Drivers,
-    string? RawState);
+    string? RawState,
+    TimeSpan? ExpectedUpdateInterval = null);
