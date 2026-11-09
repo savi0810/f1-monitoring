@@ -1,6 +1,4 @@
-using F1.Collector.Consuming;
 using F1.Collector.Extensions;
-using F1.Collector.OpenF1;
 using F1.Collector.Publishing;
 using Serilog;
 
@@ -12,14 +10,8 @@ builder.Host.UseSerilog((context, configuration) =>
         .WriteTo.Console());
 
 builder.Services.AddHealthChecks();
-builder.Services.AddSingleton<OpenF1RateLimiter>();
+builder.Services.AddCollectorServices(builder.Configuration);
 builder.Services.AddRabbitMq(builder.Configuration);
-builder.Services.AddHttpClient<OpenF1Client>(client =>
-{
-    client.BaseAddress = new Uri("https://api.openf1.org/v1/");
-}).AddStandardResilienceHandler();
-builder.Services.AddHostedService<ImportRequestedConsumer>();
-builder.Services.AddHostedService<SessionCatalogPublisher>();
 
 var app = builder.Build();
 

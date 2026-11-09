@@ -14,12 +14,15 @@ public class LiveHub : Hub
         _timingService = timingService;
     }
 
-    public async Task SubscribeSession(int sessionKey)
+    public async Task SubscribeSession(string sessionId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"session:{sessionKey}");
+        if (string.IsNullOrWhiteSpace(sessionId) || sessionId.Length > 200)
+            throw new HubException("Invalid session identifier.");
 
-        var snapshot = await _timingService.GetSnapshotAsync(sessionKey, Context.ConnectionAborted);
-        if (snapshot is not null)
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"session:{sessionId}");
+
+        var snapshot = await _timingService.GetSnapshotAsync(sessionId, Context.ConnectionAborted);
+        if (snapshot != null)
             await Clients.Caller.SendAsync("TimingUpdated", snapshot, Context.ConnectionAborted);
     }
 }

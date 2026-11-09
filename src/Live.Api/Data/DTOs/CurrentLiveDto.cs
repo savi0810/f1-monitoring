@@ -1,5 +1,7 @@
+using F1Monitor.Contracts;
+
 namespace Live.Api.Data.DTOs;
 
 public record CurrentLiveDto(
     bool IsConnected,
-    LiveSnapshotDto? Snapshot);
+    LiveRaceSnapshot? Snapshot);

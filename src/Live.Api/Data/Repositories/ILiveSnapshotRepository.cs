@@ -1,10 +1,10 @@
-using Live.Api.Data.Models;
+using F1Monitor.Contracts;
 
 namespace Live.Api.Data.Repositories;
 
 public interface ILiveSnapshotRepository
 {
-    Task<LiveSnapshot?> GetAsync(int sessionKey, CancellationToken cancellationToken = default);
+    Task<LiveRaceSnapshot?> GetAsync(string? sessionId, CancellationToken cancellationToken = default);
 
-    Task<LiveSnapshot> SaveIfNewerAsync(LiveSnapshot snapshot, CancellationToken cancellationToken = default);
+    Task<(bool Saved, LiveRaceSnapshot? Previous)> SaveIfNewerAsync(LiveRaceSnapshot snapshot, CancellationToken cancellationToken = default);
 }
