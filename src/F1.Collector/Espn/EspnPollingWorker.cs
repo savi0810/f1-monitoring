@@ -116,6 +116,11 @@ public class EspnPollingWorker : BackgroundService
                         finishedObservations = 0;
                         finishedAt = null;
                     }
+
+                    pending = pending with
+                    {
+                        ExpectedUpdateInterval = _schedule.GetInterval(options, DateTimeOffset.UtcNow, scheduledAt, finishedAt)
+                    };
                 }
 
                 await _publisher.PublishAsync(pending, stoppingToken);
