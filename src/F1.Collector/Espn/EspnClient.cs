@@ -11,6 +11,6 @@ public class EspnClient
 
     public Task<HttpResponseMessage> GetScoreboardAsync(CancellationToken cancellationToken = default)
     {
-        return _httpClient.GetAsync("scoreboard", HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        return _httpClient.GetAsync("scoreboard?dates=20261120", HttpCompletionOption.ResponseHeadersRead, cancellationToken);
     }
 }
