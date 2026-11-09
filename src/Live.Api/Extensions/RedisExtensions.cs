@@ -17,7 +17,6 @@ public static class RedisExtensions
             ConnectionMultiplexer.Connect(redisOptions));
 
         services.AddScoped<ILiveSnapshotRepository, LiveSnapshotRepository>();
-        services.AddScoped<ILiveSourceStateRepository, LiveSourceStateRepository>();
 
         return services;
     }
