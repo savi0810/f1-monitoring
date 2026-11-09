@@ -25,7 +25,8 @@ public class TimingService
     {
         var result = await _repository.SaveIfNewerAsync(snapshot, cancellationToken);
         if (!result.Saved)
-            return;
+            snapshot = result.Previous
+                ?? throw new InvalidOperationException("Current snapshot is missing.");
 
         var group = _hub.Clients.Group($"session:{snapshot.SessionId}");
 
@@ -36,7 +37,7 @@ public class TimingService
         }, cancellationToken);
 
         var previous = result.Previous;
-        if (previous != null)
+        if (result.Saved && previous != null)
         {
             var comparable = snapshot with
             {
