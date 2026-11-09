@@ -15,6 +15,9 @@ public static class CollectorExtensions
         services.AddOptions<EspnOptions>()
             .Bind(configuration.GetSection("Espn"))
             .Validate(options => new[] { "Auto", "Start", "Stop" }.Contains(options.Mode, StringComparer.OrdinalIgnoreCase), "Espn:Mode must be Auto, Start, or Stop.")
+            .Validate(options => options.PollIntervalMilliseconds > 0, "Espn:PollIntervalMilliseconds must be positive.")
+            .Validate(options => options.SchedulePollIntervalSeconds > 0, "Espn:SchedulePollIntervalSeconds must be positive.")
+            .Validate(options => options.RequestTimeoutSeconds > 0, "Espn:RequestTimeoutSeconds must be positive.")
             .ValidateOnStart();
 
         services.AddSingleton<EspnSnapshotMapper>();
