@@ -97,7 +97,7 @@ public class EspnPollingWorker : BackgroundService
                     var raceEvent = scoreboard.Events?.FirstOrDefault(item => item.Id == options.EventId)
                         ?? throw new InvalidOperationException("ESPN event was not found.");
 
-                    var competition = _mapper.FindCompetition(scoreboard, options.EventId, options.CompetitionId)
+                    var competition = raceEvent.Competitions?.FirstOrDefault(item => item.Id == options.CompetitionId)
                         ?? throw new InvalidOperationException("ESPN competition was not found.");
 
                     pending = _mapper.MapSnapshot(competition, raceEvent.Name ?? "", Guid.NewGuid(), observedAt)

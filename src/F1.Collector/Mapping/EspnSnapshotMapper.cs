@@ -5,12 +5,6 @@ namespace F1.Collector.Mapping;
 
 public class EspnSnapshotMapper
 {
-    public EspnCompetition? FindCompetition(EspnScoreboard scoreboard, string eventId, string competitionId)
-    {
-        var raceEvent = scoreboard.Events?.FirstOrDefault(item => item.Id == eventId);
-        return raceEvent?.Competitions?.FirstOrDefault(item => item.Id == competitionId);
-    }
-
     public LiveRaceSnapshot? MapSnapshot(EspnCompetition competition, string sessionName, Guid eventId, DateTimeOffset observedAt)
     {
         var sessionType = competition.Type?.Abbreviation;
