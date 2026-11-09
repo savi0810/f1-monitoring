@@ -14,8 +14,9 @@ public class LiveSourceService
     public async Task<CurrentLiveDto> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
         var snapshot = await _timingService.GetSnapshotAsync(null, cancellationToken);
+        var maxAgeSeconds = Math.Max(30, (snapshot?.ExpectedUpdateInterval?.TotalSeconds ?? 0) + 30);
         var isConnected = snapshot != null
-            && snapshot.ObservedAt >= DateTimeOffset.UtcNow.AddSeconds(-30);
+            && (DateTimeOffset.UtcNow - snapshot.ObservedAt).TotalSeconds <= maxAgeSeconds;
 
         return new CurrentLiveDto(isConnected, snapshot);
     }
