@@ -1,5 +1,4 @@
 using F1.Collector.Publishing;
-using F1Monitor.Contracts;
 using RabbitMQ.Client;
 
 namespace F1.Collector.Extensions;

@@ -16,7 +16,7 @@ public class EspnSnapshotMapper
         return new LiveRaceSnapshot(eventId, "espn", $"espn:{competition.Id}", observedAt, competition.Date.Value, sessionType, sessionName, MapState(competition.Status), status?.Completed, status?.Description ?? "", MapDrivers(competition), status?.State);
     }
 
-    public string MapState(EspnStatus? status)
+    private static string MapState(EspnStatus? status)
     {
         return (status?.Type?.State, status?.Type?.Completed) switch
         {
@@ -27,7 +27,7 @@ public class EspnSnapshotMapper
         };
     }
 
-    public IReadOnlyList<LiveDriverSnapshot> MapDrivers(EspnCompetition competition)
+    private static IReadOnlyList<LiveDriverSnapshot> MapDrivers(EspnCompetition competition)
     {
         var drivers = new List<LiveDriverSnapshot>();
 
