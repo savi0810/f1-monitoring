@@ -15,6 +15,7 @@ public static class AlertsExtensions
         services.AddScoped<IAlertRuleRepository, AlertRuleRepository>();
         services.AddScoped<IDriverSubscriptionRepository, DriverSubscriptionRepository>();
         services.AddScoped<IAlertRuleService, AlertRuleService>();
+        services.AddScoped<IDriverSubscriptionService, DriverSubscriptionService>();
         services.AddScoped<LapRuleMatcher>();
         services.AddScoped<LapEventProcessor>();
 
