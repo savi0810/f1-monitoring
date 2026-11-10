@@ -13,6 +13,7 @@ public static class AlertsExtensions
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IAlertRuleRepository, AlertRuleRepository>();
+        services.AddScoped<IDriverSubscriptionRepository, DriverSubscriptionRepository>();
         services.AddScoped<IAlertRuleService, AlertRuleService>();
         services.AddScoped<LapRuleMatcher>();
         services.AddScoped<LapEventProcessor>();
