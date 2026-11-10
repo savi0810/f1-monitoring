@@ -6,6 +6,7 @@ public static class LiveExtensions
 {
     public static IServiceCollection AddLiveServices(this IServiceCollection services)
     {
+        services.AddSingleton<PositionChangeDetector>();
         services.AddScoped<TimingService>();
         services.AddScoped<LiveSourceService>();
 
