@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using F1Monitor.Contracts;
+using Live.Api.Data.DTOs;
 using StackExchange.Redis;
 
 namespace Live.Api.Data.Repositories;
@@ -7,6 +8,7 @@ namespace Live.Api.Data.Repositories;
 public class LiveSnapshotRepository : ILiveSnapshotRepository
 {
     private const string CurrentKey = "live:snapshot:current";
+    private const string OutboxKey = "live:alerts:outbox";
     private readonly IDatabase _db;
 
     public LiveSnapshotRepository(IConnectionMultiplexer redis)
@@ -24,7 +26,7 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
         return json.IsNull ? null : JsonSerializer.Deserialize<LiveRaceSnapshot>(json.ToString());
     }
 
-    public async Task<(bool Saved, LiveRaceSnapshot? Previous)> SaveIfNewerAsync(LiveRaceSnapshot snapshot, CancellationToken cancellationToken = default)
+    public async Task<(bool Saved, LiveRaceSnapshot? Previous)> SaveIfNewerAsync(LiveRaceSnapshot snapshot, Func<LiveRaceSnapshot?, PendingLiveEventDto?> createEvent, CancellationToken cancellationToken = default)
     {
         var key = $"live:snapshot:session:{snapshot.SessionId}";
         var json = JsonSerializer.Serialize(snapshot);
@@ -48,6 +50,14 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
                 : JsonSerializer.Deserialize<LiveRaceSnapshot>(currentJson.ToString())
                     ?? throw new JsonException("Current snapshot is empty.");
 
+            var pendingEvent = createEvent(previous);
+            var pendingEventJson = pendingEvent == null
+                ? null
+                : JsonSerializer.Serialize(pendingEvent);
+            var outboxLength = pendingEventJson != null
+                ? await _db.ListLengthAsync(OutboxKey)
+                : 0;
+
             var transaction = _db.CreateTransaction();
             transaction.AddCondition(previousJson.IsNull
                 ? Condition.KeyNotExists(key)
@@ -56,13 +66,25 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
                 ? Condition.KeyNotExists(CurrentKey)
                 : Condition.StringEqual(CurrentKey, currentJson));
 
+            if (pendingEventJson != null)
+                transaction.AddCondition(Condition.ListLengthEqual(OutboxKey, outboxLength));
+
             _ = transaction.StringSetAsync(key, json);
 
             if (current == null || snapshot.ObservedAt > current.ObservedAt)
                 _ = transaction.StringSetAsync(CurrentKey, json);
 
+            Task<long>? enqueueTask = null;
+            if (pendingEventJson != null)
+                enqueueTask = transaction.ListRightPushAsync(OutboxKey, pendingEventJson);
+
             if (await transaction.ExecuteAsync())
+            {
+                if (enqueueTask != null)
+                    await enqueueTask;
+
                 return (true, previous);
+            }
         }
     }
 }
