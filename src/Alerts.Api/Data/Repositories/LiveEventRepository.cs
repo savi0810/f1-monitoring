@@ -12,9 +12,11 @@ public class LiveEventRepository : ILiveEventRepository
         _context = context;
     }
 
-    public async Task SaveAsync(Guid eventId, IReadOnlyCollection<OutboxMessage> messages, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(Guid eventId, string sessionId, IReadOnlyCollection<OutboxMessage> messages, CancellationToken cancellationToken = default)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        await LockRaceAsync(sessionId, cancellationToken);
 
         var inserted = await _context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "ProcessedEvents" ("EventId", "ProcessedAt")
@@ -25,15 +27,23 @@ public class LiveEventRepository : ILiveEventRepository
         if (inserted == 0)
             return;
 
-        _context.OutboxMessages.AddRange(messages);
+        var completed = await _context.CompletedRaces
+            .AnyAsync(race => race.SessionId == sessionId, cancellationToken);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        if (!completed)
+        {
+            _context.OutboxMessages.AddRange(messages);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<bool> SaveCompletionAsync(CompletedRace race, CancellationToken cancellationToken = default)
     {
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        await LockRaceAsync(race.SessionId, cancellationToken);
 
         var processed = await _context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "ProcessedEvents" ("EventId", "ProcessedAt")
@@ -53,5 +63,12 @@ public class LiveEventRepository : ILiveEventRepository
         await transaction.CommitAsync(cancellationToken);
 
         return completed > 0;
+    }
+
+    private async Task LockRaceAsync(string sessionId, CancellationToken cancellationToken)
+    {
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT pg_advisory_xact_lock(hashtextextended({sessionId}, 0))",
+            cancellationToken);
     }
 }

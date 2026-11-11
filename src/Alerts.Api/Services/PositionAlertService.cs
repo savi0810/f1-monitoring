@@ -67,6 +67,6 @@ public class PositionAlertService : IPositionAlertService
             messages.Add(outboxMessage);
         }
 
-        await _eventRepository.SaveAsync(message.EventId, messages, cancellationToken);
+        await _eventRepository.SaveAsync(message.EventId, message.SessionId, messages, cancellationToken);
     }
 }
