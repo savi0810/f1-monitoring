@@ -87,4 +87,41 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
             }
         }
     }
+
+    public async Task<PendingLiveEventDto?> GetPendingEventAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var json = await _db.ListGetByIndexAsync(OutboxKey, 0);
+        if (json.IsNull)
+            return null;
+
+        return JsonSerializer.Deserialize<PendingLiveEventDto>(json.ToString())
+            ?? throw new JsonException("Stored pending event is empty.");
+    }
+
+    public async Task<bool> RemovePendingEventAsync(Guid eventId, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var json = await _db.ListGetByIndexAsync(OutboxKey, 0);
+        if (json.IsNull)
+            return false;
+
+        var pendingEvent = JsonSerializer.Deserialize<PendingLiveEventDto>(json.ToString())
+            ?? throw new JsonException("Stored pending event is empty.");
+
+        if (pendingEvent.EventId != eventId)
+            return false;
+
+        var transaction = _db.CreateTransaction();
+        transaction.AddCondition(Condition.ListIndexEqual(OutboxKey, 0, json));
+
+        var removeTask = transaction.ListLeftPopAsync(OutboxKey);
+        if (!await transaction.ExecuteAsync())
+            return false;
+
+        await removeTask;
+        return true;
+    }
 }
