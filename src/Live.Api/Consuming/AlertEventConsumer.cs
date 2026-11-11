@@ -23,11 +23,24 @@ public class AlertEventConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await _channel.ExchangeDeclareAsync(
+            exchange: ExchangeNames.F1Live,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+
         await _channel.QueueDeclareAsync(
             queue: QueueNames.AlertTriggered,
             durable: true,
             exclusive: false,
             autoDelete: false,
+            cancellationToken: stoppingToken);
+
+        await _channel.QueueBindAsync(
+            queue: QueueNames.AlertTriggered,
+            exchange: ExchangeNames.F1Live,
+            routingKey: RoutingKeys.For(RoutingKeys.Alerts, EventTypes.AlertTriggered),
             cancellationToken: stoppingToken);
 
         await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);

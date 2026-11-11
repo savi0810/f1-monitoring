@@ -4,6 +4,7 @@ public static class RoutingKeys
 {
     public const string Live = "live";
     public const string History = "history";
+    public const string Alerts = "alerts";
 
     public const string AllEvents = "#";
     public const string LiveEvents = "live.#";
