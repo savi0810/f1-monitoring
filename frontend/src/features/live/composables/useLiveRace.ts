@@ -1,6 +1,7 @@
+import { HubConnectionBuilder } from '@microsoft/signalr'
 import { onScopeDispose, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { hasValidToken } from '@/features/auth/tokenStorage'
+import { hasValidToken, loadToken } from '@/features/auth/tokenStorage'
 import { getCurrentLive } from '../api/liveApi'
 import type { LiveRaceSnapshot } from '../types'
 
@@ -10,6 +11,12 @@ export function useLiveRace() {
   const sourceConnected = ref(false)
   const loading = ref(false)
   const error = ref('')
+  const connection = new HubConnectionBuilder()
+    .withUrl('/livehub', {
+      accessTokenFactory: () => loadToken() ?? '',
+    })
+    .withAutomaticReconnect()
+    .build()
   let controller: AbortController | undefined
 
   async function loadCurrent() {
@@ -38,7 +45,10 @@ export function useLiveRace() {
     }
   }
 
-  onScopeDispose(() => controller?.abort())
+  onScopeDispose(() => {
+    controller?.abort()
+    void connection.stop()
+  })
 
   return { snapshot, sourceConnected, loading, error, loadCurrent }
 }
