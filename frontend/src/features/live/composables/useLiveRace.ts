@@ -46,10 +46,16 @@ export function useLiveRace() {
   let controller: AbortController | undefined
   let disposed = false
   let connecting = false
+  let synchronizing = false
+  let subscribedSessionId: string | undefined
 
   const freshnessTimer = setInterval(() => {
     now.value = Date.now()
   }, 1000)
+
+  const synchronizationTimer = setInterval(() => {
+    void synchronize()
+  }, 30_000)
 
   function observeSource(value: string) {
     const observedAt = Date.parse(value)
@@ -100,16 +106,17 @@ export function useLiveRace() {
   })
 
   connection.onclose(() => {
+    subscribedSessionId = undefined
     if (!disposed) connectionState.value = HubConnectionState.Disconnected
   })
 
-  async function loadCurrent() {
+  async function loadCurrent(background = false) {
     if (disposed) return
 
     controller?.abort()
     const request = new AbortController()
     controller = request
-    loading.value = true
+    if (!background) loading.value = true
     error.value = ''
 
     try {
@@ -138,7 +145,7 @@ export function useLiveRace() {
         if (!hasValidToken()) await router.replace({ name: 'login' })
       }
     } finally {
-      if (!request.signal.aborted) loading.value = false
+      if (!request.signal.aborted && !background) loading.value = false
     }
   }
 
@@ -147,6 +154,7 @@ export function useLiveRace() {
 
     const sessionId = snapshot.value?.sessionId
     if (sessionId) await connection.invoke('SubscribeSession', sessionId)
+    if (!disposed) subscribedSessionId = sessionId
   }
 
   async function handleConnectionError(cause: unknown) {
@@ -165,8 +173,40 @@ export function useLiveRace() {
     if (!hasValidToken()) await router.replace({ name: 'login' })
   }
 
+  async function synchronize() {
+    if (disposed || synchronizing || connecting || loading.value
+      || connectionState.value === HubConnectionState.Reconnecting
+      || connection.state === HubConnectionState.Disconnecting) return
+
+    synchronizing = true
+
+    try {
+      await loadCurrent(true)
+      if (disposed || error.value || loading.value
+        || connectionState.value !== HubConnectionState.Connected
+        || connection.state !== HubConnectionState.Connected
+        || subscribedSessionId === snapshot.value?.sessionId) return
+
+      connecting = true
+      await connection.stop()
+      if (disposed) return
+
+      connectionState.value = HubConnectionState.Connecting
+      await connection.start()
+      if (disposed) return
+
+      await subscribeSession()
+      if (!disposed) connectionState.value = HubConnectionState.Connected
+    } catch (cause) {
+      await handleConnectionError(cause)
+    } finally {
+      connecting = false
+      synchronizing = false
+    }
+  }
+
   async function connect() {
-    if (disposed || connecting
+    if (disposed || connecting || synchronizing
       || connection.state !== HubConnectionState.Disconnected) return
 
     connecting = true
@@ -191,6 +231,7 @@ export function useLiveRace() {
   onScopeDispose(() => {
     disposed = true
     clearInterval(freshnessTimer)
+    clearInterval(synchronizationTimer)
     controller?.abort()
     connection.off('TimingUpdated')
     connection.off('SourceUpdated')
