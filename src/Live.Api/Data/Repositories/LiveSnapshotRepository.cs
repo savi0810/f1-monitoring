@@ -26,7 +26,19 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
         return DeserializeSnapshot(json);
     }
 
-    public async Task<bool> TrySaveAsync(LiveRaceSnapshot snapshot, Guid? expectedEventId, PendingLiveEventDto? pendingEvent, CancellationToken cancellationToken = default)
+    public async Task<RaceCompleted?> GetCompletionAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var json = await _db.StringGetAsync($"live:race:completed:{sessionId}");
+
+        return json.IsNull
+            ? null
+            : JsonSerializer.Deserialize<RaceCompleted>(json.ToString())
+                ?? throw new JsonException("Stored race completion is empty.");
+    }
+
+    public async Task<bool> TrySaveAsync(LiveRaceSnapshot snapshot, Guid? expectedEventId, PendingLiveEventDto? pendingEvent, RaceCompleted? completion, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -45,11 +57,23 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
 
         var writes = QueueSnapshotWrites(transaction, key, snapshot, currentJson, pendingEvent);
 
+        if (completion != null)
+            writes.Add(QueueCompletionWrite(transaction, completion));
+
         if (!await transaction.ExecuteAsync())
             return false;
 
         await Task.WhenAll(writes);
         return true;
+    }
+
+    private static Task<bool> QueueCompletionWrite(ITransaction transaction, RaceCompleted completion)
+    {
+        var key = $"live:race:completed:{completion.SessionId}";
+
+        transaction.AddCondition(Condition.KeyNotExists(key));
+
+        return transaction.StringSetAsync(key, JsonSerializer.Serialize(completion));
     }
 
     private static LiveRaceSnapshot? DeserializeSnapshot(RedisValue json)

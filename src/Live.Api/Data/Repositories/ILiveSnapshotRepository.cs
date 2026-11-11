@@ -7,7 +7,9 @@ public interface ILiveSnapshotRepository
 {
     Task<LiveRaceSnapshot?> GetAsync(string? sessionId, CancellationToken cancellationToken = default);
 
-    Task<bool> TrySaveAsync(LiveRaceSnapshot snapshot, Guid? expectedEventId, PendingLiveEventDto? pendingEvent, CancellationToken cancellationToken = default);
+    Task<RaceCompleted?> GetCompletionAsync(string sessionId, CancellationToken cancellationToken = default);
+
+    Task<bool> TrySaveAsync(LiveRaceSnapshot snapshot, Guid? expectedEventId, PendingLiveEventDto? pendingEvent, RaceCompleted? completion, CancellationToken cancellationToken = default);
 
     Task<PendingLiveEventDto?> GetPendingEventAsync(CancellationToken cancellationToken = default);
 

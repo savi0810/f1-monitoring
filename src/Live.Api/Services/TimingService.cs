@@ -11,12 +11,14 @@ public class TimingService
     private readonly ILiveSnapshotRepository _repository;
     private readonly IHubContext<LiveHub> _hub;
     private readonly PositionChangeDetector _positionChangeDetector;
+    private readonly RaceCompletionDetector _raceCompletionDetector;
 
-    public TimingService(ILiveSnapshotRepository repository, IHubContext<LiveHub> hub, PositionChangeDetector positionChangeDetector)
+    public TimingService(ILiveSnapshotRepository repository, IHubContext<LiveHub> hub, PositionChangeDetector positionChangeDetector, RaceCompletionDetector raceCompletionDetector)
     {
         _repository = repository;
         _hub = hub;
         _positionChangeDetector = positionChangeDetector;
+        _raceCompletionDetector = raceCompletionDetector;
     }
 
     public Task<LiveRaceSnapshot?> GetSnapshotAsync(string? sessionId, CancellationToken cancellationToken = default)
@@ -66,15 +68,29 @@ public class TimingService
             if (previous != null && snapshot.ObservedAt <= previous.ObservedAt)
                 return (false, previous);
 
-            var pendingEvent = CreateEvent(previous, snapshot);
+            var recordedCompletion = await _repository.GetCompletionAsync(snapshot.SessionId, cancellationToken);
+            var completion = recordedCompletion == null
+                ? _raceCompletionDetector.Detect(snapshot)
+                : null;
+            var pendingEvent = recordedCompletion == null
+                ? CreateEvent(previous, snapshot, completion)
+                : null;
 
-            if (await _repository.TrySaveAsync(snapshot, previous?.EventId, pendingEvent, cancellationToken))
+            if (await _repository.TrySaveAsync(snapshot, previous?.EventId, pendingEvent, completion, cancellationToken))
                 return (true, previous);
         }
     }
 
-    private PendingLiveEventDto? CreateEvent(LiveRaceSnapshot? previous, LiveRaceSnapshot snapshot)
+    private PendingLiveEventDto? CreateEvent(LiveRaceSnapshot? previous, LiveRaceSnapshot snapshot, RaceCompleted? completion)
     {
+        if (completion != null)
+        {
+            return new PendingLiveEventDto(
+                completion.EventId,
+                RoutingKeys.For(RoutingKeys.Live, EventTypes.RaceCompleted),
+                EventSerializer.Serialize(completion));
+        }
+
         var changes = _positionChangeDetector.Detect(previous, snapshot);
         if (changes.Count == 0)
             return null;
