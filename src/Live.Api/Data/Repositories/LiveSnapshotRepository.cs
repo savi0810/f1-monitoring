@@ -23,7 +23,7 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
         var key = sessionId == null ? CurrentKey : $"live:snapshot:session:{sessionId}";
         var json = await _db.StringGetAsync(key);
 
-        return json.IsNull ? null : JsonSerializer.Deserialize<LiveRaceSnapshot>(json.ToString());
+        return DeserializeSnapshot(json);
     }
 
     public async Task<bool> TrySaveAsync(LiveRaceSnapshot snapshot, Guid? expectedEventId, PendingLiveEventDto? pendingEvent, CancellationToken cancellationToken = default)
