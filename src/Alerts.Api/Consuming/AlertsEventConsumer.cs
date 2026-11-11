@@ -71,6 +71,12 @@ public class AlertsEventConsumer : BackgroundService
             routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.DriverPositionsChanged),
             cancellationToken: stoppingToken);
 
+        await _channel.QueueBindAsync(
+            queue: QueueNames.AlertsLiveEvents,
+            exchange: ExchangeNames.F1Live,
+            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.RaceCompleted),
+            cancellationToken: stoppingToken);
+
         await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -79,15 +85,8 @@ public class AlertsEventConsumer : BackgroundService
         {
             try
             {
-                if (args.RoutingKey != RoutingKeys.For(RoutingKeys.Live, EventTypes.DriverPositionsChanged))
-                    throw new JsonException("Unexpected alerts routing key.");
-
-                var json = Encoding.UTF8.GetString(args.Body.Span);
-                var message = EventSerializer.Deserialize<DriverPositionsChanged>(json);
-
-                using var scope = _scopeFactory.CreateScope();
-                var service = scope.ServiceProvider.GetRequiredService<IPositionAlertService>();
-                await service.ProcessAsync(message, stoppingToken);
+                await ProcessEventAsync(
+                    args.RoutingKey, Encoding.UTF8.GetString(args.Body.Span), stoppingToken);
 
                 await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
             }
@@ -105,5 +104,30 @@ public class AlertsEventConsumer : BackgroundService
         };
 
         await _channel.BasicConsumeAsync(QueueNames.AlertsLiveEvents, autoAck: false, consumer, stoppingToken);
+    }
+
+    private async Task ProcessEventAsync(string routingKey, string json, CancellationToken cancellationToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+
+        if (routingKey == RoutingKeys.For(RoutingKeys.Live, EventTypes.DriverPositionsChanged))
+        {
+            var message = EventSerializer.Deserialize<DriverPositionsChanged>(json);
+            var service = scope.ServiceProvider.GetRequiredService<IPositionAlertService>();
+
+            await service.ProcessAsync(message, cancellationToken);
+            return;
+        }
+
+        if (routingKey == RoutingKeys.For(RoutingKeys.Live, EventTypes.RaceCompleted))
+        {
+            var message = EventSerializer.Deserialize<RaceCompleted>(json);
+            var service = scope.ServiceProvider.GetRequiredService<IRaceCompletionService>();
+
+            await service.ProcessAsync(message, cancellationToken);
+            return;
+        }
+
+        throw new JsonException("Unexpected alerts routing key.");
     }
 }

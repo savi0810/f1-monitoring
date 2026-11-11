@@ -60,6 +60,11 @@ public class LiveEventRepository : ILiveEventRepository
             ON CONFLICT ("SessionId") DO NOTHING
             """, cancellationToken);
 
+        if (completed > 0)
+            await _context.DriverSubscriptions
+                .Where(subscription => subscription.CreatedAt <= race.ObservedAt)
+                .ExecuteDeleteAsync(cancellationToken);
+
         await transaction.CommitAsync(cancellationToken);
 
         return completed > 0;
