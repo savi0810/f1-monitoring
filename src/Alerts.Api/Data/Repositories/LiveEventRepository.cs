@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Alerts.Api.Data.Repositories;
 
-public class LiveEventRepository
+public class LiveEventRepository : ILiveEventRepository
 {
     private readonly AppDbContext _context;
 
