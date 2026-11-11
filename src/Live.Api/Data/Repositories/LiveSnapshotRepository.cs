@@ -26,66 +26,64 @@ public class LiveSnapshotRepository : ILiveSnapshotRepository
         return json.IsNull ? null : JsonSerializer.Deserialize<LiveRaceSnapshot>(json.ToString());
     }
 
-    public async Task<(bool Saved, LiveRaceSnapshot? Previous)> SaveIfNewerAsync(LiveRaceSnapshot snapshot, Func<LiveRaceSnapshot?, PendingLiveEventDto?> createEvent, CancellationToken cancellationToken = default)
+    public async Task<bool> TrySaveAsync(LiveRaceSnapshot snapshot, Guid? expectedEventId, PendingLiveEventDto? pendingEvent, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var key = $"live:snapshot:session:{snapshot.SessionId}";
+        var previousJson = await _db.StringGetAsync(key);
+        var previous = DeserializeSnapshot(previousJson);
+
+        if (previous?.EventId != expectedEventId)
+            return false;
+
+        var currentJson = await _db.StringGetAsync(CurrentKey);
+        var transaction = _db.CreateTransaction();
+
+        AddSnapshotCondition(transaction, key, previousJson);
+        AddSnapshotCondition(transaction, CurrentKey, currentJson);
+
+        var writes = QueueSnapshotWrites(transaction, key, snapshot, currentJson, pendingEvent);
+
+        if (!await transaction.ExecuteAsync())
+            return false;
+
+        await Task.WhenAll(writes);
+        return true;
+    }
+
+    private static LiveRaceSnapshot? DeserializeSnapshot(RedisValue json)
+    {
+        return json.IsNull
+            ? null
+            : JsonSerializer.Deserialize<LiveRaceSnapshot>(json.ToString())
+                ?? throw new JsonException("Stored snapshot is empty.");
+    }
+
+    private static void AddSnapshotCondition(ITransaction transaction, string key, RedisValue expectedJson)
+    {
+        transaction.AddCondition(expectedJson.IsNull
+            ? Condition.KeyNotExists(key)
+            : Condition.StringEqual(key, expectedJson));
+    }
+
+    private static List<Task> QueueSnapshotWrites(ITransaction transaction, string key, LiveRaceSnapshot snapshot, RedisValue currentJson, PendingLiveEventDto? pendingEvent)
+    {
+        var current = DeserializeSnapshot(currentJson);
         var json = JsonSerializer.Serialize(snapshot);
-
-        while (true)
+        var writes = new List<Task>
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            transaction.StringSetAsync(key, json)
+        };
 
-            var previousJson = await _db.StringGetAsync(key);
-            var previous = previousJson.IsNull
-                ? null
-                : JsonSerializer.Deserialize<LiveRaceSnapshot>(previousJson.ToString())
-                    ?? throw new JsonException("Stored snapshot is empty.");
+        if (current == null || snapshot.ObservedAt > current.ObservedAt)
+            writes.Add(transaction.StringSetAsync(CurrentKey, json));
 
-            if (previous != null && snapshot.ObservedAt <= previous.ObservedAt)
-                return (false, previous);
+        if (pendingEvent != null)
+            writes.Add(transaction.ListRightPushAsync(
+                OutboxKey, JsonSerializer.Serialize(pendingEvent)));
 
-            var currentJson = await _db.StringGetAsync(CurrentKey);
-            var current = currentJson.IsNull
-                ? null
-                : JsonSerializer.Deserialize<LiveRaceSnapshot>(currentJson.ToString())
-                    ?? throw new JsonException("Current snapshot is empty.");
-
-            var pendingEvent = createEvent(previous);
-            var pendingEventJson = pendingEvent == null
-                ? null
-                : JsonSerializer.Serialize(pendingEvent);
-            var outboxLength = pendingEventJson != null
-                ? await _db.ListLengthAsync(OutboxKey)
-                : 0;
-
-            var transaction = _db.CreateTransaction();
-            transaction.AddCondition(previousJson.IsNull
-                ? Condition.KeyNotExists(key)
-                : Condition.StringEqual(key, previousJson));
-            transaction.AddCondition(currentJson.IsNull
-                ? Condition.KeyNotExists(CurrentKey)
-                : Condition.StringEqual(CurrentKey, currentJson));
-
-            if (pendingEventJson != null)
-                transaction.AddCondition(Condition.ListLengthEqual(OutboxKey, outboxLength));
-
-            _ = transaction.StringSetAsync(key, json);
-
-            if (current == null || snapshot.ObservedAt > current.ObservedAt)
-                _ = transaction.StringSetAsync(CurrentKey, json);
-
-            Task<long>? enqueueTask = null;
-            if (pendingEventJson != null)
-                enqueueTask = transaction.ListRightPushAsync(OutboxKey, pendingEventJson);
-
-            if (await transaction.ExecuteAsync())
-            {
-                if (enqueueTask != null)
-                    await enqueueTask;
-
-                return (true, previous);
-            }
-        }
+        return writes;
     }
 
     public async Task<PendingLiveEventDto?> GetPendingEventAsync(CancellationToken cancellationToken = default)

@@ -26,7 +26,7 @@ public class TimingService
 
     public async Task ProcessAsync(LiveRaceSnapshot snapshot, CancellationToken cancellationToken = default)
     {
-        var result = await _repository.SaveIfNewerAsync(snapshot, previous => CreateEvent(previous, snapshot), cancellationToken);
+        var result = await SaveSnapshotAsync(snapshot, cancellationToken);
         if (!result.Saved)
             snapshot = result.Previous
                 ?? throw new InvalidOperationException("Current snapshot is missing.");
@@ -54,6 +54,23 @@ public class TimingService
         }
 
         await group.SendAsync("TimingUpdated", snapshot, cancellationToken);
+    }
+
+    private async Task<(bool Saved, LiveRaceSnapshot? Previous)> SaveSnapshotAsync(LiveRaceSnapshot snapshot, CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var previous = await _repository.GetAsync(snapshot.SessionId, cancellationToken);
+            if (previous != null && snapshot.ObservedAt <= previous.ObservedAt)
+                return (false, previous);
+
+            var pendingEvent = CreateEvent(previous, snapshot);
+
+            if (await _repository.TrySaveAsync(snapshot, previous?.EventId, pendingEvent, cancellationToken))
+                return (true, previous);
+        }
     }
 
     private PendingLiveEventDto? CreateEvent(LiveRaceSnapshot? previous, LiveRaceSnapshot snapshot)
