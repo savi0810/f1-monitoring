@@ -23,7 +23,6 @@ public class OutboxDispatcher : BackgroundService
             try
             {
                 await _publisher.DeclareExchangeAsync(stoppingToken);
-                await _publisher.DeclareQueueAsync(stoppingToken);
 
                 using var scope = _scopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();

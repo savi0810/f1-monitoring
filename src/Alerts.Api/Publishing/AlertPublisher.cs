@@ -21,22 +21,6 @@ public class AlertPublisher
             autoDelete: false,
             cancellationToken: cancellationToken);
 
-    public async Task DeclareQueueAsync(CancellationToken cancellationToken = default)
-    {
-        await _channel.QueueDeclareAsync(
-            queue: QueueNames.AlertTriggered,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
-
-        await _channel.QueueBindAsync(
-            queue: QueueNames.AlertTriggered,
-            exchange: ExchangeNames.F1Live,
-            routingKey: RoutingKeys.For(RoutingKeys.Alerts, EventTypes.AlertTriggered),
-            cancellationToken: cancellationToken);
-    }
-
     public async Task PublishAsync(Guid alertId, string payload, CancellationToken cancellationToken = default)
     {
         await _channel.BasicPublishAsync(
