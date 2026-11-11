@@ -22,7 +22,7 @@ public class OutboxDispatcher : BackgroundService
         {
             try
             {
-                await _publisher.DeclareQueueAsync(stoppingToken);
+                await _publisher.DeclareExchangeAsync(stoppingToken);
 
                 using var scope = _scopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();

@@ -10,8 +10,8 @@ namespace Alerts.Api.Consuming;
 public class AlertsEventConsumer : BackgroundService
 {
     private const string DeadLetterExchange = "alerts.dead";
-    private const string DeadLetterQueue = "alerts.events.dlq";
-    private const string DeadLetterRoutingKey = "alerts.events.dead";
+    private const string DeadLetterQueue = "alerts.live.events.dlq";
+    private const string DeadLetterRoutingKey = "alerts.live.events.dead";
 
     private readonly IChannel _channel;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -27,7 +27,7 @@ public class AlertsEventConsumer : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await _channel.ExchangeDeclareAsync(
-            exchange: ExchangeNames.F1Events,
+            exchange: ExchangeNames.F1Live,
             type: ExchangeType.Topic,
             durable: true,
             autoDelete: false,
@@ -54,7 +54,7 @@ public class AlertsEventConsumer : BackgroundService
             cancellationToken: stoppingToken);
 
         await _channel.QueueDeclareAsync(
-            queue: QueueNames.AlertsEvents,
+            queue: QueueNames.AlertsLiveEvents,
             durable: true,
             exclusive: false,
             autoDelete: false,
@@ -66,10 +66,18 @@ public class AlertsEventConsumer : BackgroundService
             cancellationToken: stoppingToken);
 
         await _channel.QueueBindAsync(
-            queue: QueueNames.AlertsEvents,
-            exchange: ExchangeNames.F1Events,
-            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.LapCompleted),
+            queue: QueueNames.AlertsLiveEvents,
+            exchange: ExchangeNames.F1Live,
+            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.DriverPositionsChanged),
             cancellationToken: stoppingToken);
+
+        await _channel.QueueBindAsync(
+            queue: QueueNames.AlertsLiveEvents,
+            exchange: ExchangeNames.F1Live,
+            routingKey: RoutingKeys.For(RoutingKeys.Live, EventTypes.RaceCompleted),
+            cancellationToken: stoppingToken);
+
+        await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
 
@@ -77,21 +85,8 @@ public class AlertsEventConsumer : BackgroundService
         {
             try
             {
-                if (args.RoutingKey != RoutingKeys.For(RoutingKeys.Live, EventTypes.LapCompleted))
-                {
-                    await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
-                    return;
-                }
-
-                var json = Encoding.UTF8.GetString(args.Body.Span);
-                var raceEvent = EventSerializer.Deserialize(json);
-
-                if (raceEvent.EventId == Guid.Empty)
-                    throw new JsonException("Event ID is required.");
-
-                using var scope = _scopeFactory.CreateScope();
-                var processor = scope.ServiceProvider.GetRequiredService<LapEventProcessor>();
-                await processor.ProcessAsync(raceEvent, stoppingToken);
+                await ProcessEventAsync(
+                    args.RoutingKey, Encoding.UTF8.GetString(args.Body.Span), stoppingToken);
 
                 await _channel.BasicAckAsync(args.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
             }
@@ -103,10 +98,36 @@ public class AlertsEventConsumer : BackgroundService
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 _logger.LogError(exception, "Alerts event processing failed.");
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                 await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true, cancellationToken: stoppingToken);
             }
         };
 
-        await _channel.BasicConsumeAsync(QueueNames.AlertsEvents, autoAck: false, consumer, stoppingToken);
+        await _channel.BasicConsumeAsync(QueueNames.AlertsLiveEvents, autoAck: false, consumer, stoppingToken);
+    }
+
+    private async Task ProcessEventAsync(string routingKey, string json, CancellationToken cancellationToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+
+        if (routingKey == RoutingKeys.For(RoutingKeys.Live, EventTypes.DriverPositionsChanged))
+        {
+            var message = EventSerializer.Deserialize<DriverPositionsChanged>(json);
+            var service = scope.ServiceProvider.GetRequiredService<IPositionAlertService>();
+
+            await service.ProcessAsync(message, cancellationToken);
+            return;
+        }
+
+        if (routingKey == RoutingKeys.For(RoutingKeys.Live, EventTypes.RaceCompleted))
+        {
+            var message = EventSerializer.Deserialize<RaceCompleted>(json);
+            var service = scope.ServiceProvider.GetRequiredService<IRaceCompletionService>();
+
+            await service.ProcessAsync(message, cancellationToken);
+            return;
+        }
+
+        throw new JsonException("Unexpected alerts routing key.");
     }
 }

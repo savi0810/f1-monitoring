@@ -23,11 +23,24 @@ public class AlertEventConsumer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await _channel.ExchangeDeclareAsync(
+            exchange: ExchangeNames.F1Live,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: stoppingToken);
+
         await _channel.QueueDeclareAsync(
-            queue: QueueNames.AlertTriggered,
+            queue: QueueNames.PositionAlertsTriggered,
             durable: true,
             exclusive: false,
             autoDelete: false,
+            cancellationToken: stoppingToken);
+
+        await _channel.QueueBindAsync(
+            queue: QueueNames.PositionAlertsTriggered,
+            exchange: ExchangeNames.F1Live,
+            routingKey: RoutingKeys.For(RoutingKeys.Alerts, EventTypes.PositionAlertTriggered),
             cancellationToken: stoppingToken);
 
         await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
@@ -35,7 +48,7 @@ public class AlertEventConsumer : BackgroundService
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.ReceivedAsync += (_, args) => HandleAsync(args, stoppingToken);
 
-        await _channel.BasicConsumeAsync(QueueNames.AlertTriggered, autoAck: false, consumer, stoppingToken);
+        await _channel.BasicConsumeAsync(QueueNames.PositionAlertsTriggered, autoAck: false, consumer, stoppingToken);
     }
 
     private async Task HandleAsync(BasicDeliverEventArgs args, CancellationToken cancellationToken)
@@ -43,10 +56,22 @@ public class AlertEventConsumer : BackgroundService
         try
         {
             var json = Encoding.UTF8.GetString(args.Body.Span);
-            var alert = EventSerializer.Deserialize<AlertTriggered>(json);
+            var alert = EventSerializer.Deserialize<PositionAlertTriggered>(json);
 
-            if (alert.AlertId == Guid.Empty || alert.UserId == Guid.Empty)
-                throw new JsonException("Invalid alert event.");
+            if (alert.AlertId == Guid.Empty
+                || alert.UserId == Guid.Empty
+                || alert.SubscriptionId == Guid.Empty
+                || alert.EventId == Guid.Empty
+                || string.IsNullOrWhiteSpace(alert.SessionId)
+                || alert.SessionId.Length > 128
+                || string.IsNullOrWhiteSpace(alert.DriverId)
+                || alert.DriverId.Length > 128
+                || string.IsNullOrWhiteSpace(alert.DriverName)
+                || alert.PreviousPosition <= 0
+                || alert.CurrentPosition <= 0
+                || alert.PreviousPosition == alert.CurrentPosition
+                || alert.ObservedAt == default)
+                throw new JsonException("Invalid position alert event.");
 
             await _hub.Clients.User(alert.UserId.ToString())
                 .SendAsync("AlertTriggered", alert, cancellationToken);
@@ -61,6 +86,7 @@ public class AlertEventConsumer : BackgroundService
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             _logger.LogError(exception, "Alert event processing failed.");
+            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true, cancellationToken: cancellationToken);
         }
     }

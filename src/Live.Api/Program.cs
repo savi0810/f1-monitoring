@@ -1,6 +1,7 @@
 using Live.Api.Consuming;
 using Live.Api.Extensions;
 using Live.Api.Hubs;
+using Live.Api.Publishing;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,7 @@ builder.Services.AddLiveServices();
 builder.Services.AddRabbitMq(builder.Configuration);
 builder.Services.AddHostedService<LiveEventConsumer>();
 builder.Services.AddHostedService<AlertEventConsumer>();
+builder.Services.AddHostedService<LiveOutboxPublisher>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 var app = builder.Build();

@@ -22,24 +22,53 @@ namespace Alerts.Api.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Alerts.Api.Data.Models.AlertRule", b =>
+            modelBuilder.Entity("Alerts.Api.Data.Models.CompletedRace", b =>
+                {
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ObservedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("SessionId");
+
+                    b.HasIndex("RecordedAt");
+
+                    b.ToTable("CompletedRaces");
+                });
+
+            modelBuilder.Entity("Alerts.Api.Data.Models.DriverSubscription", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("DriverNumber")
-                        .HasColumnType("integer");
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<double>("LapTimeThresholdSeconds")
-                        .HasColumnType("double precision");
+                    b.Property<string>("DriverId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.ToTable("AlertRules");
+                    b.HasIndex("DriverId");
+
+                    b.HasIndex("UserId", "DriverId")
+                        .IsUnique();
+
+                    b.ToTable("DriverSubscriptions");
                 });
 
             modelBuilder.Entity("Alerts.Api.Data.Models.OutboxMessage", b =>
