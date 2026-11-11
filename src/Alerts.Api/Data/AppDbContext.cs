@@ -10,7 +10,6 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<AlertRule> AlertRules { get; set; }
     public DbSet<DriverSubscription> DriverSubscriptions { get; set; }
     public DbSet<CompletedRace> CompletedRaces { get; set; }
     public DbSet<ProcessedEvent> ProcessedEvents { get; set; }

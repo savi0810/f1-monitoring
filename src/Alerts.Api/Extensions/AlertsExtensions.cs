@@ -12,14 +12,10 @@ public static class AlertsExtensions
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-        services.AddScoped<IAlertRuleRepository, AlertRuleRepository>();
         services.AddScoped<IDriverSubscriptionRepository, DriverSubscriptionRepository>();
         services.AddScoped<ILiveEventRepository, LiveEventRepository>();
-        services.AddScoped<IAlertRuleService, AlertRuleService>();
         services.AddScoped<IDriverSubscriptionService, DriverSubscriptionService>();
         services.AddScoped<IPositionAlertService, PositionAlertService>();
-        services.AddScoped<LapRuleMatcher>();
-        services.AddScoped<LapEventProcessor>();
 
         return services;
     }
