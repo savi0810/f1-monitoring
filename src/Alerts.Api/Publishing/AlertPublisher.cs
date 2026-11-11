@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using F1Monitor.Contracts;
 using RabbitMQ.Client;
 
@@ -23,16 +24,25 @@ public class AlertPublisher
 
     public async Task PublishAsync(Guid alertId, string payload, CancellationToken cancellationToken = default)
     {
+        var alert = EventSerializer.Deserialize<PositionAlertTriggered>(payload);
+
+        if (alertId == Guid.Empty
+            || alert.AlertId != alertId
+            || alert.UserId == Guid.Empty
+            || alert.SubscriptionId == Guid.Empty
+            || alert.EventId == Guid.Empty)
+            throw new JsonException("Invalid position alert outbox message.");
+
         await _channel.BasicPublishAsync(
             exchange: ExchangeNames.F1Live,
-            routingKey: RoutingKeys.For(RoutingKeys.Alerts, EventTypes.AlertTriggered),
+            routingKey: RoutingKeys.For(RoutingKeys.Alerts, EventTypes.PositionAlertTriggered),
             mandatory: true,
             basicProperties: new BasicProperties
             {
                 Persistent = true,
                 MessageId = alertId.ToString(),
                 ContentType = "application/json",
-                Type = EventTypes.AlertTriggered
+                Type = EventTypes.PositionAlertTriggered
             },
             body: Encoding.UTF8.GetBytes(payload),
             cancellationToken: cancellationToken);
