@@ -16,6 +16,7 @@ public static class AlertsExtensions
         services.AddScoped<ILiveEventRepository, LiveEventRepository>();
         services.AddScoped<IDriverSubscriptionService, DriverSubscriptionService>();
         services.AddScoped<IPositionAlertService, PositionAlertService>();
+        services.AddScoped<IRaceCompletionService, RaceCompletionService>();
 
         return services;
     }
