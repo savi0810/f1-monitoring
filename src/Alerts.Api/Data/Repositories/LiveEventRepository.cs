@@ -30,4 +30,28 @@ public class LiveEventRepository : ILiveEventRepository
         await _context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
+
+    public async Task<bool> SaveCompletionAsync(CompletedRace race, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        var processed = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "ProcessedEvents" ("EventId", "ProcessedAt")
+            VALUES ({race.EventId}, {DateTimeOffset.UtcNow})
+            ON CONFLICT ("EventId") DO NOTHING
+            """, cancellationToken);
+
+        if (processed == 0)
+            return false;
+
+        var completed = await _context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "CompletedRaces" ("SessionId", "EventId", "ObservedAt", "RecordedAt")
+            VALUES ({race.SessionId}, {race.EventId}, {race.ObservedAt}, {race.RecordedAt})
+            ON CONFLICT ("SessionId") DO NOTHING
+            """, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return completed > 0;
+    }
 }
