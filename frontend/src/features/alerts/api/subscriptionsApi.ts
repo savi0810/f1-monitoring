@@ -43,3 +43,22 @@ export async function createSubscription(request: CreateDriverSubscriptionDto, s
 
   return await response.json() as DriverSubscriptionDto
 }
+
+export async function deleteSubscription(driverId: string, signal?: AbortSignal): Promise<void> {
+  const token = loadToken()
+  if (!token) throw new Error('Срок авторизации истёк. Войдите снова.')
+
+  const query = new URLSearchParams({ driverId })
+  const response = await fetch(`/api/alerts/subscriptions?${query}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  })
+
+  if (response.status === 401) {
+    clearToken()
+    throw new Error('Срок авторизации истёк. Войдите снова.')
+  }
+
+  if (!response.ok) throw new Error('Не удалось удалить подписку.')
+}
