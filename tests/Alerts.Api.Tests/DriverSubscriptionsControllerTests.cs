@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Alerts.Api.Controllers;
 using Alerts.Api.Data;
 using Alerts.Api.Data.DTOs;
+using Alerts.Api.Data.Models;
 using Alerts.Api.Data.Repositories;
 using Alerts.Api.Services;
 using Microsoft.AspNetCore.Http;
@@ -70,6 +71,28 @@ public class DriverSubscriptionsControllerTests : IDisposable
         Assert.Empty(Assert.IsAssignableFrom<IReadOnlyList<DriverSubscriptionDto>>(
             Assert.IsType<OkObjectResult>(remaining.Result).Value));
         Assert.Empty(await _context.DriverSubscriptions.ToListAsync());
+    }
+
+    [Fact]
+    public async Task DeleteSubscription_DeletesOnlyCurrentUserSubscription()
+    {
+        var otherSubscription = new DriverSubscription
+        {
+            UserId = Guid.NewGuid(),
+            DriverId = "1"
+        };
+        _context.DriverSubscriptions.Add(otherSubscription);
+        await _context.SaveChangesAsync();
+        await _controller.CreateSubscription(
+            new CreateDriverSubscriptionDto("1"), CancellationToken.None);
+        Assert.Equal(2, await _context.DriverSubscriptions.CountAsync());
+
+        var result = await _controller.DeleteSubscription("1", CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+        var remaining = Assert.Single(await _context.DriverSubscriptions.ToListAsync());
+        Assert.Equal(otherSubscription.Id, remaining.Id);
+        Assert.Equal(otherSubscription.UserId, remaining.UserId);
     }
 
     [Theory]
