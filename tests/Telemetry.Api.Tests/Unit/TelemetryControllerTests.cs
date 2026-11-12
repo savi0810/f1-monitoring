@@ -117,6 +117,32 @@ public class TelemetryControllerTests
     }
 
     [Fact]
+    public async Task ImportSession_UnknownSession_ReturnsNotFound()
+    {
+        _importService.StartImportAsync(1, Arg.Any<CancellationToken>())
+            .Returns((SessionImportDto?)null);
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .ImportSession(1, CancellationToken.None);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task ImportSession_FailedImport_ReturnsServiceUnavailable()
+    {
+        var import = new SessionImportDto(11396, Guid.NewGuid(), ImportStatus.Failed, null);
+        _importService.StartImportAsync(11396, Arg.Any<CancellationToken>()).Returns(import);
+
+        var result = await new TelemetryController(_queryService, _importService)
+            .ImportSession(11396, CancellationToken.None);
+
+        var response = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(503, response.StatusCode);
+        Assert.Same(import, response.Value);
+    }
+
+    [Fact]
     public async Task GetImportStatus_ExistingImport_ReturnsImport()
     {
         var import = new SessionImportDto(11396, Guid.NewGuid(), ImportStatus.Pending, null);
