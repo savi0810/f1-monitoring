@@ -20,12 +20,31 @@ const filteredResults = computed(() => {
       .some(value => value.toLocaleLowerCase().includes(query)),
   )
 })
+
+function getMembersStr(numMembers: number | undefined): string {
+  if (!numMembers) return ''
+  let str = ''
+
+  const lastDigit = numMembers % 10
+  const lastTwoDigits = numMembers % 100
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    str = 'участников'
+  } else if (lastDigit === 1) {
+    str = 'участник'
+  } else if (lastDigit >= 2 && lastDigit <= 4) {
+    str = 'участника'
+  } else {
+    str = 'участников'
+  }
+  return `${numMembers} ${str}`
+}
 </script>
 
 <template>
   <section class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-4">
-      <h2 class="text-xl font-semibold">Результаты · {{ results.length }}</h2>
+      <h2 class="text-xl font-semibold">Результаты · {{ getMembersStr(results.length) }} </h2>
       <Input v-model="search" class="max-w-sm" placeholder="Поиск пилота или команды" aria-label="Поиск пилота или команды" />
     </div>
 

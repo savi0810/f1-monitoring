@@ -23,8 +23,6 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=postgres-auth;Port=5432;Database=authdb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       Jwt__Key: ${JWT_KEY}
-    ports:
-      - "5185:8080"
     depends_on:
       postgres-auth:
         condition: service_healthy
@@ -58,8 +56,6 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: F1Monitor.Auth
       Jwt__Audience: F1Monitor
-    ports:
-      - "5168:8080"
     depends_on:
       postgres-telemetry:
         condition: service_healthy
@@ -95,8 +91,6 @@ services:
       RabbitMq__Host: rabbitmq
       RabbitMq__UserName: ${RABBITMQ_USER}
       RabbitMq__Password: ${RABBITMQ_PASSWORD}
-    ports:
-      - "5262:8080"
     depends_on:
       postgres-alerts:
         condition: service_healthy
@@ -131,8 +125,6 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: F1Monitor.Auth
       Jwt__Audience: F1Monitor
-    ports:
-      - "5052:8080"
     depends_on:
       redis:
         condition: service_healthy
@@ -146,9 +138,6 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_DEFAULT_VHOST: /
-    ports:
-      - "5672:5672"
-      - "15672:15672"
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/5672"]
       interval: 5s
@@ -166,8 +155,6 @@ services:
       RabbitMq__Host: rabbitmq
       RabbitMq__UserName: ${RABBITMQ_USER}
       RabbitMq__Password: ${RABBITMQ_PASSWORD}
-    ports:
-      - "5301:8080"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -186,6 +173,17 @@ services:
       - telemetry-api
       - alerts-api
       - live-api
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      gateway-api:
+        condition: service_started
 
 volumes:
   postgres_auth_data:

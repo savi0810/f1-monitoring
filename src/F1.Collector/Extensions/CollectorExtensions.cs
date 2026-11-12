@@ -34,7 +34,7 @@ public static class CollectorExtensions
 
         services.AddHttpClient<EspnClient>(client =>
         {
-            client.BaseAddress = new Uri("https://site.api.espn.com/apis/site/v2/sports/racing/f1/");
+            client.BaseAddress = new Uri(configuration["Espn:BaseUrl"] ?? "https://site.api.espn.com/apis/site/v2/sports/racing/f1/");
         });
 
         services.AddHostedService<ImportRequestedConsumer>();
