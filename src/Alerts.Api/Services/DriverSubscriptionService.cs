@@ -7,10 +7,12 @@ namespace Alerts.Api.Services;
 public class DriverSubscriptionService : IDriverSubscriptionService
 {
     private readonly IDriverSubscriptionRepository _repository;
+    private readonly ILogger<DriverSubscriptionService> _logger;
 
-    public DriverSubscriptionService(IDriverSubscriptionRepository repository)
+    public DriverSubscriptionService(IDriverSubscriptionRepository repository, ILogger<DriverSubscriptionService> logger)
     {
         _repository = repository;
+        _logger = logger;
     }
 
     public async Task<IReadOnlyList<DriverSubscriptionDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -30,12 +32,14 @@ public class DriverSubscriptionService : IDriverSubscriptionService
         };
 
         var stored = await _repository.AddOrGetAsync(subscription, cancellationToken);
+        _logger.LogInformation("Subscription {SubscriptionId} is active for user {UserId} and driver {DriverId}", stored.Id, userId, stored.DriverId);
 
         return new DriverSubscriptionDto(stored.Id, stored.DriverId, stored.CreatedAt);
     }
 
-    public Task DeleteAsync(Guid userId, string driverId, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid userId, string driverId, CancellationToken cancellationToken = default)
     {
-        return _repository.DeleteAsync(userId, driverId, cancellationToken);
+        await _repository.DeleteAsync(userId, driverId, cancellationToken);
+        _logger.LogInformation("Subscription removal completed for user {UserId} and driver {DriverId}", userId, driverId);
     }
 }

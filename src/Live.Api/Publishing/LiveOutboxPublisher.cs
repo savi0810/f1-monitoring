@@ -73,5 +73,7 @@ public class LiveOutboxPublisher : BackgroundService
             basicProperties: properties,
             body: Encoding.UTF8.GetBytes(pendingEvent.Payload),
             cancellationToken: cancellationToken);
+
+        _logger.LogInformation("Live event {EventId} published with routing key {RoutingKey}", pendingEvent.EventId, pendingEvent.RoutingKey);
     }
 }

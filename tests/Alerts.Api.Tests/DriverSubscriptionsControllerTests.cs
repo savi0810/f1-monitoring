@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Alerts.Api.Tests;
 
@@ -30,7 +31,7 @@ public class DriverSubscriptionsControllerTests : IDisposable
         _context.Database.EnsureCreated();
 
         var repository = new DriverSubscriptionRepository(_context);
-        var service = new DriverSubscriptionService(repository);
+        var service = new DriverSubscriptionService(repository, NullLogger<DriverSubscriptionService>.Instance);
         _controller = new DriverSubscriptionsController(service);
         _controller.ControllerContext = new ControllerContext
         {

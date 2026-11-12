@@ -63,12 +63,12 @@ public class AlertsEventConsumer : BackgroundService
             }
             catch (JsonException exception)
             {
-                _logger.LogError(exception, "Invalid alerts event.");
+                _logger.LogError(exception, "Invalid alerts event with routing key {RoutingKey}, delivery tag {DeliveryTag}", args.RoutingKey, args.DeliveryTag);
                 await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                _logger.LogError(exception, "Alerts event processing failed.");
+                _logger.LogError(exception, "Alerts event processing failed for routing key {RoutingKey}, delivery tag {DeliveryTag}", args.RoutingKey, args.DeliveryTag);
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                 await _channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true, cancellationToken: stoppingToken);
             }
@@ -87,6 +87,7 @@ public class AlertsEventConsumer : BackgroundService
             var service = scope.ServiceProvider.GetRequiredService<IPositionAlertService>();
 
             await service.ProcessAsync(message, cancellationToken);
+            _logger.LogInformation("Position change event {EventId} for session {SessionId} processed", message.EventId, message.SessionId);
             return;
         }
 
@@ -96,6 +97,7 @@ public class AlertsEventConsumer : BackgroundService
             var service = scope.ServiceProvider.GetRequiredService<IRaceCompletionService>();
 
             await service.ProcessAsync(message, cancellationToken);
+            _logger.LogInformation("Race completion event {EventId} for session {SessionId} processed", message.EventId, message.SessionId);
             return;
         }
 
