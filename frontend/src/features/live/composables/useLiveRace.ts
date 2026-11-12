@@ -268,6 +268,7 @@ export function useLiveRace() {
     loading,
     error,
     loadCurrent,
+    synchronize,
     connect,
   }
 }
