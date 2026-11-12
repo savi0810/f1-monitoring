@@ -8,10 +8,6 @@ namespace Live.Api.Consuming;
 
 public class LiveEventConsumer : BackgroundService
 {
-    private const string DeadLetterExchange = "live.dead";
-    private const string DeadLetterQueue = "live.events.dlq";
-    private const string DeadLetterRoutingKey = "live.events.dead";
-
     private readonly IChannel _channel;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<LiveEventConsumer> _logger;
@@ -32,36 +28,11 @@ public class LiveEventConsumer : BackgroundService
             autoDelete: false,
             cancellationToken: stoppingToken);
 
-        await _channel.ExchangeDeclareAsync(
-            exchange: DeadLetterExchange,
-            type: ExchangeType.Direct,
-            durable: true,
-            autoDelete: false,
-            cancellationToken: stoppingToken);
-
-        await _channel.QueueDeclareAsync(
-            queue: DeadLetterQueue,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            cancellationToken: stoppingToken);
-
-        await _channel.QueueBindAsync(
-            queue: DeadLetterQueue,
-            exchange: DeadLetterExchange,
-            routingKey: DeadLetterRoutingKey,
-            cancellationToken: stoppingToken);
-
         await _channel.QueueDeclareAsync(
             queue: QueueNames.LiveSnapshots,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: new Dictionary<string, object?>
-            {
-                ["x-dead-letter-exchange"] = DeadLetterExchange,
-                ["x-dead-letter-routing-key"] = DeadLetterRoutingKey
-            },
             cancellationToken: stoppingToken);
 
         await _channel.QueueBindAsync(
