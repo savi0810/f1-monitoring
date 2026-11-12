@@ -1,23 +1,21 @@
 ﻿using Live.Api.Data.DTOs;
+using Live.Api.Data.Repositories;
 
 namespace Live.Api.Services;
 
 public class LiveSourceService
 {
-    private readonly TimingService _timingService;
+    private readonly ILiveSnapshotRepository _repository;
 
-    public LiveSourceService(TimingService timingService)
+    public LiveSourceService(ILiveSnapshotRepository repository)
     {
-        _timingService = timingService;
+        _repository = repository;
     }
 
     public async Task<CurrentLiveDto> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
-        var snapshot = await _timingService.GetSnapshotAsync(null, cancellationToken);
-        var maxAgeSeconds = Math.Max(30, (snapshot?.ExpectedUpdateInterval?.TotalSeconds ?? 0) + 30);
-        var isConnected = snapshot != null
-            && (DateTimeOffset.UtcNow - snapshot.ObservedAt).TotalSeconds <= maxAgeSeconds;
+        var snapshot = await _repository.GetAsync(null, cancellationToken);
 
-        return new CurrentLiveDto(isConnected, snapshot);
+        return new CurrentLiveDto(snapshot);
     }
 }

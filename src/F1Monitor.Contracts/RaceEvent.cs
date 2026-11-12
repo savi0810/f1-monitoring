@@ -8,6 +8,4 @@ public record RaceEvent(
     int SessionKey,
     int? DriverNumber,
     DateTimeOffset? OccurredAt,
-    JsonElement Payload,
-    string? SessionType = null,
-    string? SessionName = null);
+    JsonElement Payload);

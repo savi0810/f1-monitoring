@@ -120,8 +120,7 @@ public class SessionRepository : ISessionRepository
                     s.CountryName,
                     s.DateStart,
                     s.DateEnd,
-                    s.IsCancelled,
-                    _context.Laps.Count(l => l.SessionKey == s.SessionKey))
+                    s.IsCancelled)
             })
             .ToListAsync();
 
@@ -144,33 +143,5 @@ public class SessionRepository : ISessionRepository
                             .ToList()))
                     .ToList()))
             .ToList();
-    }
-
-    public async Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year)
-    {
-        var query = _context.Sessions.AsNoTracking();
-
-        if (type is not null)
-            query = query.Where(s => s.SessionType == type);
-
-        if (year is not null)
-            query = query.Where(s => s.Year == year);
-
-        var sessions = await query
-            .Select(s => new SessionDto(
-                s.SessionKey,
-                s.MeetingKey,
-                s.Year,
-                s.SessionType,
-                s.SessionName,
-                s.CircuitShortName,
-                s.CountryName,
-                s.DateStart,
-                s.DateEnd,
-                s.IsCancelled,
-                _context.Laps.Count(l => l.SessionKey == s.SessionKey)))
-            .ToListAsync();
-
-        return sessions.OrderByDescending(s => s.DateStart).ToList();
     }
 }

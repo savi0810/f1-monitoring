@@ -7,7 +7,6 @@ public static class RoutingKeys
     public const string Alerts = "alerts";
 
     public const string AllEvents = "#";
-    public const string LiveEvents = "live.#";
 
     public static string For(string source, string eventType) => $"{source}.{eventType}";
 }

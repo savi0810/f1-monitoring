@@ -48,7 +48,7 @@ public class SessionImportService : ISessionImportService
     private async Task<SessionImportDto> StartImportForSessionAsync(Session session, CancellationToken cancellationToken)
     {
         if (session.ImportId is Guid existingId && session.ImportStatus is ImportStatus existingStatus
-            && existingStatus is (ImportStatus.Pending or ImportStatus.Processing or ImportStatus.Completed or ImportStatus.Empty))
+            && existingStatus is (ImportStatus.Pending or ImportStatus.Completed or ImportStatus.Empty))
             return new(session.SessionKey, existingId, existingStatus, session.ImportError);
 
         var importId = Guid.NewGuid();

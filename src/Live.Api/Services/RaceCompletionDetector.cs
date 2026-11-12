@@ -4,10 +4,6 @@ namespace Live.Api.Services;
 
 public class RaceCompletionDetector
 {
-    public RaceCompletionDetector()
-    {
-    }
-
     public RaceCompleted? Detect(LiveRaceSnapshot snapshot)
     {
         if (snapshot.Source != "espn"

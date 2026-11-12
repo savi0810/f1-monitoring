@@ -27,14 +27,19 @@ public class EventSerializerTests
     }
 
     [Fact]
-    public void SerializeThenDeserialize_RestoresSessionFields()
+    public void Deserialize_LegacyEventWithSessionFields_RestoresKnownFields()
     {
-        var original = NewEvent() with { SessionType = "Race", SessionName = "Sprint" };
+        const string json = """
+            {"eventId":"11111111-1111-1111-1111-111111111111","type":"lap_completed","sessionKey":11388,
+             "driverNumber":3,"occurredAt":null,"payload":{},"sessionType":"Race","sessionName":"Sprint"}
+            """;
 
-        var restored = EventSerializer.Deserialize(EventSerializer.Serialize(original));
+        var restored = EventSerializer.Deserialize(json);
 
-        Assert.Equal("Race", restored.SessionType);
-        Assert.Equal("Sprint", restored.SessionName);
+        Assert.Equal(Guid.Parse("11111111-1111-1111-1111-111111111111"), restored.EventId);
+        Assert.Equal(EventTypes.LapCompleted, restored.Type);
+        Assert.Equal(11388, restored.SessionKey);
+        Assert.Equal(3, restored.DriverNumber);
     }
 
     [Fact]
@@ -45,20 +50,6 @@ public class EventSerializerTests
         var restored = EventSerializer.Deserialize(EventSerializer.Serialize(original));
 
         Assert.Null(restored.OccurredAt);
-    }
-
-    [Fact]
-    public void Deserialize_EventWithoutSessionFields_ReturnsNulls()
-    {
-        const string json = """
-            {"eventId":"11111111-1111-1111-1111-111111111111","type":"lap_completed","sessionKey":11388,
-             "driverNumber":3,"occurredAt":"2026-10-11T12:03:39+00:00","payload":{}}
-            """;
-
-        var restored = EventSerializer.Deserialize(json);
-
-        Assert.Null(restored.SessionType);
-        Assert.Null(restored.SessionName);
     }
 
     [Fact]

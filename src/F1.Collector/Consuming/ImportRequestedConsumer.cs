@@ -44,7 +44,7 @@ public class ImportRequestedConsumer : BackgroundService
         var participants = SessionParticipantMapper.Map(drivers, results);
         var driverEvents = participants.Select(participant =>
             SessionParticipantMapper.MapEvent(participant.Driver, participant.Result));
-        var lapEvents = laps.Select(lap => LapEventMapper.Map(lap, session));
+        var lapEvents = laps.Select(LapEventMapper.Map);
 
         await _eventPublisher.PublishToExchangeAsync(driverEvents, RoutingKeys.History, cancellationToken);
         await _eventPublisher.PublishToExchangeAsync(lapEvents, RoutingKeys.History, cancellationToken);

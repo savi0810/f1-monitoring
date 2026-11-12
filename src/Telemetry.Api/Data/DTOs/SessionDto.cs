@@ -10,5 +10,4 @@ public record SessionDto(
     string? CountryName,
     DateTimeOffset DateStart,
     DateTimeOffset DateEnd,
-    bool IsCancelled,
-    int LapCount);
+    bool IsCancelled);

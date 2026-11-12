@@ -18,21 +18,21 @@ public class PositionChangeDetectorTests
     {
         var previous = new LiveRaceSnapshot(
             Guid.NewGuid(), "espn", "race", DateTimeOffset.UtcNow,
-            DateTimeOffset.UtcNow, "Race", "Grand Prix", "in", false, "",
+            DateTimeOffset.UtcNow, "Race", "Grand Prix", "in", false,
             [
-                new("1", "Max Verstappen", "VER", 2),
-                new("4", "Lando Norris", "NOR", 1),
-                new("16", "Charles Leclerc", "LEC", 3)
-            ], null);
+                new("1", "Max Verstappen", 2),
+                new("4", "Lando Norris", 1),
+                new("16", "Charles Leclerc", 3)
+            ]);
         var current = previous with
         {
             EventId = Guid.NewGuid(),
             ObservedAt = previous.ObservedAt.AddSeconds(1),
             Drivers =
             [
-                new("1", "Max Verstappen", "VER", 1),
-                new("4", "Lando Norris", "NOR", 2),
-                new("16", "Charles Leclerc", "LEC", 3)
+                new("1", "Max Verstappen", 1),
+                new("4", "Lando Norris", 2),
+                new("16", "Charles Leclerc", 3)
             ]
         };
 
@@ -55,8 +55,8 @@ public class PositionChangeDetectorTests
     {
         var previous = new LiveRaceSnapshot(
             Guid.NewGuid(), "espn", "race", DateTimeOffset.UtcNow,
-            DateTimeOffset.UtcNow, "Race", "Grand Prix", "in", false, "",
-            [new("1", "Max Verstappen", "VER", 2)], null);
+            DateTimeOffset.UtcNow, "Race", "Grand Prix", "in", false,
+            [new("1", "Max Verstappen", 2)]);
         var current = previous with
         {
             EventId = Guid.NewGuid(),
@@ -65,7 +65,7 @@ public class PositionChangeDetectorTests
             State = state,
             Completed = completed,
             ObservedAt = previous.ObservedAt.AddSeconds(seconds),
-            Drivers = [new("1", "Max Verstappen", "VER", 1)]
+            Drivers = [new("1", "Max Verstappen", 1)]
         };
 
         var changes = _detector.Detect(previous, current);

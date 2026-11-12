@@ -19,7 +19,7 @@ public class RaceCompletionDetectorTests
         var snapshot = new LiveRaceSnapshot(
             Guid.NewGuid(), "espn", "race-1", DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow, "race", "Grand Prix", "post",
-            true, "Finished", [], null);
+            true, []);
 
         var result = _detector.Detect(snapshot);
 
@@ -40,7 +40,7 @@ public class RaceCompletionDetectorTests
         var snapshot = new LiveRaceSnapshot(
             Guid.NewGuid(), source, "race-1", DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow, sessionType, "Grand Prix", state,
-            completed, "", [], null);
+            completed, []);
 
         var result = _detector.Detect(snapshot);
 
