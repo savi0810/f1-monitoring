@@ -59,7 +59,7 @@ function toggleSubscription(driverId: string) {
     <CardHeader>
       <CardTitle>Позиции пилотов</CardTitle>
       <CardDescription>
-        Подпишитесь на изменения позиций выбранных пилотов.
+        Подпишитесь на пилотов для получения уведомлений об изменениях их позиций.
       </CardDescription>
     </CardHeader>
 

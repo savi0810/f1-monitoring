@@ -34,7 +34,7 @@ const driverNames = computed(() =>
     <CardHeader>
       <CardTitle>Мои подписки</CardTitle>
       <CardDescription>
-        Уведомления об изменении позиций выбранных пилотов.
+        Вы получаете уведомления об изменениях позиций выбранных пилотов.
       </CardDescription>
     </CardHeader>
 
