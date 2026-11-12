@@ -102,7 +102,7 @@ function toggleSubscription(driverId: string) {
                   <TooltipTrigger as-child>
                     <Button
                       type="button"
-                      variant="outline"
+                      :variant="subscribedDriverIds.has(driver.driverId) ? 'default' : 'outline'"
                       size="sm"
                       :disabled="isDisabled(driver.driverId)"
                       :aria-label="actionLabel(driver)"

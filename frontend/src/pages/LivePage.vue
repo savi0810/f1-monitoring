@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Bell } from '@lucide/vue'
 import { HubConnectionState } from '@microsoft/signalr'
 import { computed, onMounted, onScopeDispose, watch } from 'vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Spinner } from '@/components/ui/spinner'
 import DriverSubscriptions from '@/features/alerts/components/DriverSubscriptions.vue'
 import { useDriverSubscriptions } from '@/features/alerts/composables/useDriverSubscriptions'
@@ -131,7 +133,7 @@ onScopeDispose(() => {
     aria-label="Лайв"
     class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8"
   >
-    <header class="flex items-start justify-between gap-8">
+    <header class="flex flex-wrap items-start justify-between gap-6 border-l-4 border-primary pl-4">
       <div class="flex min-w-0 flex-col gap-2">
         <h1 class="text-3xl font-semibold tracking-tight">
           {{ snapshot?.sessionName || 'Прямая трансляция' }}
@@ -140,9 +142,6 @@ onScopeDispose(() => {
           <Badge :variant="canSubscribe ? 'default' : 'secondary'">
             {{ raceStatus }}
           </Badge>
-          <span v-if="snapshot?.statusText" class="text-muted-foreground">
-            {{ snapshot.statusText }}
-          </span>
         </div>
         <p v-if="snapshot" class="text-sm text-muted-foreground">
           Снимок:
@@ -164,6 +163,26 @@ onScopeDispose(() => {
         <Badge :variant="sourceConnected ? 'secondary' : 'outline'">
           Источник: {{ sourceStatus }}
         </Badge>
+
+        <Sheet>
+          <SheetTrigger as-child>
+            <Button type="button">
+              <Bell data-icon="inline-start" aria-hidden="true" />
+              Уведомления ({{ alerts.length }})
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader class="pr-12">
+              <SheetTitle>История уведомлений</SheetTitle>
+              <SheetDescription>
+                Последние пять событий. Закрытие панели сохраняет список.
+              </SheetDescription>
+            </SheetHeader>
+            <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+              <PositionAlerts :alerts="alerts" @dismiss="dismissAlert" />
+            </div>
+          </SheetContent>
+        </Sheet>
 
         <Button
           v-if="connectionState === HubConnectionState.Disconnected"
@@ -194,7 +213,7 @@ onScopeDispose(() => {
       </AlertDescription>
     </Alert>
 
-    <div class="grid grid-cols-[minmax(0,1fr)_24rem] items-start gap-6">
+    <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
       <LiveStandings
         v-if="snapshot"
         :drivers="drivers"
@@ -232,7 +251,7 @@ onScopeDispose(() => {
         </CardContent>
       </Card>
 
-      <aside class="flex min-w-0 flex-col gap-6" aria-label="Подписки и уведомления">
+      <aside class="min-w-0 lg:sticky lg:top-6" aria-label="Подписки">
         <DriverSubscriptions
           :subscriptions="subscriptions"
           :drivers="drivers"
@@ -243,7 +262,6 @@ onScopeDispose(() => {
           @unsubscribe="unsubscribeDriver"
           @reload="loadSubscriptions"
         />
-        <PositionAlerts :alerts="alerts" @dismiss="dismissAlert" />
       </aside>
     </div>
   </main>

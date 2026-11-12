@@ -1,6 +1,7 @@
 import { HttpError, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { computed, onScopeDispose, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 import { clearToken, hasValidToken, loadToken } from '@/features/auth/tokenStorage'
 import { getCurrentLive } from '../api/liveApi'
 import type { LiveRaceSnapshot, PositionAlertTriggered, SourceUpdated } from '../types'
@@ -79,6 +80,11 @@ export function useLiveRace() {
         Date.parse(right.observedAt) - Date.parse(left.observedAt),
       )
       .slice(0, 5)
+
+    toast('Пилот изменил позицию', {
+      id: incoming.alertId,
+      description: `${incoming.driverName}: ${incoming.previousPosition} → ${incoming.currentPosition}`,
+    })
   })
 
   connection.on('SourceUpdated', (incoming: SourceUpdated) => {
