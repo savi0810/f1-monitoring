@@ -24,7 +24,6 @@ const statusText = computed(() => {
 
   switch (props.sessionImport.status) {
     case ImportStatus.Pending:
-    case ImportStatus.Processing:
       return 'Данные загружаются'
     case ImportStatus.Completed:
       return 'Данные загружены'
@@ -50,7 +49,7 @@ const canImport = computed(() =>
   <div class="flex flex-col items-start gap-2">
     <div v-if="loading || statusLoaded" role="status" class="flex items-center gap-2 text-sm text-muted-foreground">
       <Spinner
-        v-if="loading || sessionImport?.status === ImportStatus.Pending || sessionImport?.status === ImportStatus.Processing"
+        v-if="loading || sessionImport?.status === ImportStatus.Pending"
         aria-hidden="true"
       />
       <span>{{ loading ? 'Загружаем состояние…' : statusText }}</span>
