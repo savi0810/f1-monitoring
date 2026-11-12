@@ -10,13 +10,13 @@ public class SessionImportService : ISessionImportService
 {
     private readonly ISessionRepository _sessionRepository;
     private readonly ImportRequestPublisher _importRequestPublisher;
+    private readonly ILogger<SessionImportService> _logger;
 
-    public SessionImportService(
-        ISessionRepository sessionRepository,
-        ImportRequestPublisher importRequestPublisher)
+    public SessionImportService(ISessionRepository sessionRepository, ImportRequestPublisher importRequestPublisher, ILogger<SessionImportService> logger)
     {
         _sessionRepository = sessionRepository;
         _importRequestPublisher = importRequestPublisher;
+        _logger = logger;
     }
 
     public async Task<SessionImportDto?> StartImportAsync(int sessionKey, CancellationToken cancellationToken = default)
@@ -62,12 +62,17 @@ public class SessionImportService : ISessionImportService
         }
         catch (Exception exception)
         {
+            if (exception is not OperationCanceledException)
+                _logger.LogError(exception, "Failed to queue import {ImportId} for session {SessionKey}", importId, session.SessionKey);
+
             await _sessionRepository.MarkImportFailedAsync(session.SessionKey, importId, exception.Message, CancellationToken.None);
             if (exception is OperationCanceledException)
                 throw;
 
             return new(session.SessionKey, importId, ImportStatus.Failed, "The import request could not be queued.");
         }
+
+        _logger.LogInformation("Import {ImportId} queued for session {SessionKey}", importId, session.SessionKey);
 
         return new(session.SessionKey, importId, ImportStatus.Pending, null);
     }
