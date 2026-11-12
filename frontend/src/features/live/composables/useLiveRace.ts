@@ -3,7 +3,7 @@ import { computed, onScopeDispose, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { clearToken, hasValidToken, loadToken } from '@/features/auth/tokenStorage'
 import { getCurrentLive } from '../api/liveApi'
-import type { LiveRaceSnapshot, SourceUpdated } from '../types'
+import type { LiveRaceSnapshot, PositionAlertTriggered, SourceUpdated } from '../types'
 
 function parseUpdateInterval(value: string | null): number {
   const match = value?.match(/^(-)?(?:(\d+)\.)?(\d{2}):(\d{2}):(\d{2}(?:\.\d{1,7})?)$/)
@@ -23,6 +23,8 @@ function parseUpdateInterval(value: string | null): number {
 export function useLiveRace() {
   const router = useRouter()
   const snapshot = ref<LiveRaceSnapshot | null>(null)
+  const alerts = ref<PositionAlertTriggered[]>([])
+  const seenAlertIds = new Set<string>()
   const now = ref(Date.now())
   const lastSourceObservedAt = ref<number | null>(null)
   const sourceConnected = computed(() => {
@@ -67,6 +69,17 @@ export function useLiveRace() {
     )
     now.value = Date.now()
   }
+
+  connection.on('AlertTriggered', (incoming: PositionAlertTriggered) => {
+    if (disposed || seenAlertIds.has(incoming.alertId)) return
+
+    seenAlertIds.add(incoming.alertId)
+    alerts.value = [incoming, ...alerts.value]
+      .sort((left, right) =>
+        Date.parse(right.observedAt) - Date.parse(left.observedAt),
+      )
+      .slice(0, 5)
+  })
 
   connection.on('SourceUpdated', (incoming: SourceUpdated) => {
     if (disposed || incoming.sessionId !== snapshot.value?.sessionId) return
@@ -228,6 +241,12 @@ export function useLiveRace() {
     }
   }
 
+  function dismissAlert(alertId: string) {
+    if (disposed) return
+
+    alerts.value = alerts.value.filter(alert => alert.alertId !== alertId)
+  }
+
   onScopeDispose(() => {
     disposed = true
     clearInterval(freshnessTimer)
@@ -235,11 +254,15 @@ export function useLiveRace() {
     controller?.abort()
     connection.off('TimingUpdated')
     connection.off('SourceUpdated')
+    connection.off('AlertTriggered')
+    seenAlertIds.clear()
     void connection.stop()
   })
 
   return {
     snapshot,
+    alerts,
+    dismissAlert,
     sourceConnected,
     connectionState,
     loading,
