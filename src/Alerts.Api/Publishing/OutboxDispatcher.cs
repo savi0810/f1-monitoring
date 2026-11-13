@@ -37,6 +37,7 @@ public class OutboxDispatcher : BackgroundService
                     await _publisher.PublishAsync(message.Id, message.Payload, stoppingToken);
                     message.PublishedAt = DateTimeOffset.UtcNow;
                     await context.SaveChangesAsync(stoppingToken);
+                    _logger.LogInformation("Alert {AlertId} published", message.Id);
                 }
             }
             catch (Exception exception) when (exception is not OperationCanceledException)

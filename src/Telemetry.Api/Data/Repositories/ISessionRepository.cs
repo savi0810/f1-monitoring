@@ -22,5 +22,4 @@ public interface ISessionRepository
         int lapCount,
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<SessionCatalogYearDto>> GetCatalogAsync(string? type, int? year);
-    Task<IReadOnlyList<SessionDto>> GetSessionsAsync(string? type, int? year);
 }

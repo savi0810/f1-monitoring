@@ -30,6 +30,7 @@ public class ImportRequestedConsumer : BackgroundService
     public async Task HandleImportRequestedAsync(ImportRequested request, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.SessionKey);
+        _logger.LogInformation("Import {ImportId} started for session {SessionKey}", request.ImportId, request.SessionKey);
 
         var session = await _openF1Client.GetSessionAsync(request.SessionKey, cancellationToken);
         if (session is null)
@@ -43,11 +44,12 @@ public class ImportRequestedConsumer : BackgroundService
         var participants = SessionParticipantMapper.Map(drivers, results);
         var driverEvents = participants.Select(participant =>
             SessionParticipantMapper.MapEvent(participant.Driver, participant.Result));
-        var lapEvents = laps.Select(lap => LapEventMapper.Map(lap, session));
+        var lapEvents = laps.Select(LapEventMapper.Map);
 
         await _eventPublisher.PublishToExchangeAsync(driverEvents, RoutingKeys.History, cancellationToken);
         await _eventPublisher.PublishToExchangeAsync(lapEvents, RoutingKeys.History, cancellationToken);
         await PublishImportFinishedAsync(request, laps.Count, null, cancellationToken);
+        _logger.LogInformation("Import {ImportId} for session {SessionKey} published: {DriverCount} drivers, {LapCount} laps", request.ImportId, request.SessionKey, participants.Count, laps.Count);
     }
 
     private Task PublishImportFinishedAsync(
@@ -77,7 +79,7 @@ public class ImportRequestedConsumer : BackgroundService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Import request failed: {Body}", json);
+            _logger.LogError(ex, "Invalid import request");
             return false;
         }
 
@@ -88,7 +90,7 @@ public class ImportRequestedConsumer : BackgroundService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Import request failed: {Body}", json);
+            _logger.LogError(ex, "Import {ImportId} failed for session {SessionKey}", request.ImportId, request.SessionKey);
 
             try
             {
@@ -97,7 +99,7 @@ public class ImportRequestedConsumer : BackgroundService
             }
             catch (Exception publishException) when (publishException is not OperationCanceledException)
             {
-                _logger.LogError(publishException, "Failed to publish import failure for session {SessionKey}", request.SessionKey);
+                _logger.LogError(publishException, "Failed to publish failure for import {ImportId}, session {SessionKey}", request.ImportId, request.SessionKey);
                 return false;
             }
         }

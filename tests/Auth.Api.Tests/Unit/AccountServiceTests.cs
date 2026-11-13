@@ -3,6 +3,7 @@ using Auth.Api.Data.Models;
 using Auth.Api.Data.Repositories;
 using Auth.Api.Exceptions;
 using Auth.Api.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace Auth.Api.Tests.Unit;
@@ -15,7 +16,7 @@ public class AccountServiceTests
 
     public AccountServiceTests()
     {
-        _service = new AccountService(_repository, _jwt);
+        _service = new AccountService(_repository, _jwt, NullLogger<AccountService>.Instance);
     }
 
     private static RegisterDto Dto() => new() { Username = "alice", Email = "alice@test.com", Password = "secret1" };

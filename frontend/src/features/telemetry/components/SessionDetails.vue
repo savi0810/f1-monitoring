@@ -91,7 +91,7 @@ onMounted(() => {
         </div>
         <div v-else-if="!resultsError && results.length === 0" class="flex flex-col items-start gap-3 rounded-lg border p-6">
           <p class="font-medium">Результатов пока нет</p>
-          <p v-if="sessionImport?.status === ImportStatus.Pending || sessionImport?.status === ImportStatus.Processing" class="text-sm text-muted-foreground">
+          <p v-if="sessionImport?.status === ImportStatus.Pending" class="text-sm text-muted-foreground">
             Импорт выполняется. Результаты появятся после его завершения.
           </p>
           <p v-else-if="sessionImport?.status === ImportStatus.Completed || sessionImport?.status === ImportStatus.Empty" class="text-sm text-muted-foreground">

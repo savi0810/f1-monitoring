@@ -225,15 +225,6 @@ public class SessionRepositoryTests : IDisposable
         Assert.NotNull(session.ImportCompletedAt);
     }
 
-    private static Lap NewLap(int sessionKey, int lapNumber) => new()
-    {
-        EventId = Guid.NewGuid(),
-        SessionKey = sessionKey,
-        DriverNumber = 1,
-        LapNumber = lapNumber,
-        OccurredAt = DateTimeOffset.UtcNow
-    };
-
     [Fact]
     public async Task GetCatalogAsync_GroupsSessionsByYearAndMeeting()
     {
@@ -256,60 +247,51 @@ public class SessionRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetSessionsAsync_ReturnsSessionsWithLapCount()
-    {
-        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
-        await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11730));
-        var laps = new LapRepository(_db.Create());
-        await laps.AddLapAsync(NewLap(11731, 1));
-        await laps.AddLapAsync(NewLap(11731, 2));
-
-        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync(null, null);
-
-        Assert.Equal(2, sessions.Count);
-        Assert.Equal(2, sessions.Single(s => s.SessionKey == 11731).LapCount);
-        Assert.Equal(0, sessions.Single(s => s.SessionKey == 11730).LapCount);
-    }
-
-    [Fact]
-    public async Task GetSessionsAsync_FiltersByType()
+    public async Task GetCatalogAsync_FiltersByType()
     {
         var qualifying = NewSession(11730);
         qualifying.SessionType = "Qualifying";
         await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
         await new SessionRepository(_db.Create()).UpsertSessionAsync(qualifying);
 
-        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync("Qualifying", null);
+        var catalog = await new SessionRepository(_db.Create()).GetCatalogAsync("Qualifying", null);
 
-        var session = Assert.Single(sessions);
+        var year = Assert.Single(catalog);
+        var meeting = Assert.Single(year.Meetings);
+        var session = Assert.Single(meeting.Sessions);
         Assert.Equal(11730, session.SessionKey);
     }
 
     [Fact]
-    public async Task GetSessionsAsync_FiltersByYear()
+    public async Task GetCatalogAsync_FiltersByYear()
     {
         var older = NewSession(9000);
         older.Year = 2025;
         await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
         await new SessionRepository(_db.Create()).UpsertSessionAsync(older);
 
-        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync(null, 2025);
+        var catalog = await new SessionRepository(_db.Create()).GetCatalogAsync(null, 2025);
 
-        var session = Assert.Single(sessions);
+        var year = Assert.Single(catalog);
+        var meeting = Assert.Single(year.Meetings);
+        var session = Assert.Single(meeting.Sessions);
         Assert.Equal(9000, session.SessionKey);
     }
 
     [Fact]
-    public async Task GetSessionsAsync_ReturnsNewestFirst()
+    public async Task GetCatalogAsync_OrdersYearsNewestFirst()
     {
         var older = NewSession(9000);
-        older.DateStart = new DateTimeOffset(2026, 3, 1, 7, 0, 0, TimeSpan.Zero);
-        older.DateEnd = new DateTimeOffset(2026, 3, 1, 9, 0, 0, TimeSpan.Zero);
+        older.Year = 2025;
+        older.DateStart = new DateTimeOffset(2025, 3, 1, 7, 0, 0, TimeSpan.Zero);
+        older.DateEnd = new DateTimeOffset(2025, 3, 1, 9, 0, 0, TimeSpan.Zero);
         await new SessionRepository(_db.Create()).UpsertSessionAsync(older);
         await new SessionRepository(_db.Create()).UpsertSessionAsync(NewSession(11731));
 
-        var sessions = await new SessionRepository(_db.Create()).GetSessionsAsync(null, null);
+        var catalog = await new SessionRepository(_db.Create()).GetCatalogAsync(null, null);
 
-        Assert.Equal([11731, 9000], sessions.Select(s => s.SessionKey));
+        Assert.Equal([2026, 2025], catalog.Select(year => year.Year));
+        var sessions = catalog.SelectMany(year => year.Meetings).SelectMany(meeting => meeting.Sessions);
+        Assert.Equal([11731, 9000], sessions.Select(session => session.SessionKey));
     }
 }

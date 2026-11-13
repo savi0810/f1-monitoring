@@ -13,7 +13,7 @@ public class EspnSnapshotMapper
 
         var status = competition.Status?.Type;
 
-        return new LiveRaceSnapshot(eventId, "espn", $"espn:{competition.Id}", observedAt, competition.Date.Value, sessionType, sessionName, MapState(competition.Status), status?.Completed, status?.Description ?? "", MapDrivers(competition), status?.State);
+        return new LiveRaceSnapshot(eventId, "espn", $"espn:{competition.Id}", observedAt, competition.Date.Value, sessionType, sessionName, MapState(competition.Status), status?.Completed, MapDrivers(competition));
     }
 
     private static string MapState(EspnStatus? status)
@@ -38,10 +38,9 @@ public class EspnSnapshotMapper
                 continue;
 
             var fullName = athlete?.FullName ?? athlete?.ShortName ?? competitor.Id;
-            var shortName = athlete?.ShortName ?? athlete?.FullName ?? competitor.Id;
             var position = competitor.Order > 0 ? competitor.Order : null;
 
-            drivers.Add(new LiveDriverSnapshot($"espn:{competitor.Id}", fullName, shortName, position));
+            drivers.Add(new LiveDriverSnapshot($"espn:{competitor.Id}", fullName, position));
         }
 
         return drivers;

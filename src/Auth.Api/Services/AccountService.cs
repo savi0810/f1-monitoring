@@ -9,11 +9,13 @@ public class AccountService : IAccountService
 {
     private readonly IUserRepository _userRepository;
     private readonly IJwtService _jwtService;
+    private readonly ILogger<AccountService> _logger;
 
-    public AccountService(IUserRepository userRepository, IJwtService jwtService)
+    public AccountService(IUserRepository userRepository, IJwtService jwtService, ILogger<AccountService> logger)
     {
         _userRepository = userRepository;
         _jwtService = jwtService;
+        _logger = logger;
     }
 
     public async Task RegisterAsync(RegisterDto dto)
@@ -32,16 +34,27 @@ public class AccountService : IAccountService
         };
 
         await _userRepository.AddUserAsync(user);
+        _logger.LogInformation("User {UserId} registered", user.Id);
     }
 
     public async Task<TokenDto> LoginAsync(LoginDto dto)
     {
-        var user = await _userRepository.GetUserByEmailAsync(dto.Email)
-            ?? throw new InvalidCredentialsException("Неверный адрес электронной почты или пароль.");
+        var user = await _userRepository.GetUserByEmailAsync(dto.Email);
+        if (user is null)
+        {
+            _logger.LogWarning("Login rejected: invalid credentials");
+            throw new InvalidCredentialsException("Неверный адрес электронной почты или пароль.");
+        }
 
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        {
+            _logger.LogWarning("Login rejected for user {UserId}: invalid credentials", user.Id);
             throw new InvalidCredentialsException("Неверный адрес электронной почты или пароль.");
+        }
 
-        return new TokenDto { AccessToken = _jwtService.GenerateToken(user) };
+        var token = _jwtService.GenerateToken(user);
+        _logger.LogInformation("User {UserId} logged in", user.Id);
+
+        return new TokenDto { AccessToken = token };
     }
 }

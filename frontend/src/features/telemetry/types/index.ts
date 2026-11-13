@@ -9,7 +9,6 @@ export interface Session {
   dateStart: string
   dateEnd: string
   isCancelled: boolean
-  lapCount: number
 }
 
 export interface SessionCatalogMeeting {
@@ -71,7 +70,6 @@ export interface SessionResultLap {
 
 export const ImportStatus = {
   Pending: 0,
-  Processing: 1,
   Completed: 2,
   Empty: 3,
   Failed: 4,

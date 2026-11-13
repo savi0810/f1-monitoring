@@ -20,7 +20,7 @@ export function useSessionImport(sessionKey: number, onCompleted: () => void) {
   }
 
   function isActive(status: SessionImport | null) {
-    return status?.status === ImportStatus.Pending || status?.status === ImportStatus.Processing
+    return status?.status === ImportStatus.Pending
   }
 
   function isFinished(status: SessionImport | null) {

@@ -1,7 +1,6 @@
 export interface LiveDriverSnapshot {
   driverId: string
   fullName: string
-  shortName: string
   position: number | null
 }
 
@@ -15,14 +14,11 @@ export interface LiveRaceSnapshot {
   sessionName: string
   state: string
   completed: boolean | null
-  statusText: string
   drivers: LiveDriverSnapshot[]
-  rawState: string | null
   expectedUpdateInterval: string | null
 }
 
 export interface CurrentLiveDto {
-  isConnected: boolean
   snapshot: LiveRaceSnapshot | null
 }
 

@@ -26,11 +26,4 @@ public static class LapEventMapper
             lap.DateStart,
             EventSerializer.WritePayload(payload));
     }
-
-    public static RaceEvent Map(OpenF1Lap lap, OpenF1Session session) =>
-        Map(lap) with
-        {
-            SessionType = session.SessionType,
-            SessionName = session.SessionName
-        };
 }
