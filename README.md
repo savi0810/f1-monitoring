@@ -45,7 +45,7 @@
 
 ## Схема
 
-Схема и описание взаимодействия сервисов: [Архитектура](docs/ARCHITECTURE.md).
+<img width="1313" height="1198" alt="exec-70af1d08-b974-4cbd-bcc6-b8f904eeb533" src="https://github.com/user-attachments/assets/411065d4-f163-4733-8814-7c184cb89d37" />
 
 ## Быстрый старт
 
