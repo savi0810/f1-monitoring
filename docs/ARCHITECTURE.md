@@ -22,7 +22,7 @@ F1 Monitor показывает ход гонок Формулы 1 в реаль
 
 ## 3. Общая схема
 
-<img width="1214" height="1027" alt="изображение" src="https://github.com/user-attachments/assets/05de9be0-3d68-4e51-821d-72e5af97289a" />
+<img width="1313" height="1198" alt="exec-70af1d08-b974-4cbd-bcc6-b8f904eeb533" src="https://github.com/user-attachments/assets/01f1c71a-fb9d-4d47-87be-6b8b68a79a1c" />
 
 Клиент обращается к сервисам через Gateway. Сервисы между собой общаются через RabbitMQ. У каждого сервиса своя база данных.
 
