@@ -104,6 +104,9 @@ docker compose up --build
 dotnet test
 ```
 
+<img width="1669" height="700" alt="изображение" src="https://github.com/user-attachments/assets/f56c61ed-cc4e-46f6-87c9-90f6e2abd6b3" />
+
+
 GitHub Actions собирает backend и запускает тесты при push в main и при Pull Request.
 
 ## Структура репозитория
